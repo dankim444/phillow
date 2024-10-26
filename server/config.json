@@ -1,0 +1,9 @@
+{
+  "rds_host": "",
+  "rds_port": "5432",
+  "rds_user": "",
+  "rds_password": "",
+  "rds_db": "swiftify",
+  "server_host": "localhost",
+  "server_port": "8080"
+}
