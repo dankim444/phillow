@@ -23,6 +23,10 @@ app.get("/street_patterns", routes.getStreetPatterns);
 app.get("/lowest_crime_zips", routes.getLowestCrimeZips);
 app.get("/investment_scores", routes.getInvestmentScores);
 app.get("/street_safety_scores", routes.getStreetSafetyScores);
+app.get("/crime_per_capita/:zipcode", routes.getCrimePerCapitaByZipcode);
+app.get("/average_house_price/:zipcode", routes.getAverageHousePriceByZip);
+
+
 
 app.listen(config.server_port, () => {
   console.log(
