@@ -136,5 +136,5 @@ Contains details about police stations in each zip code.
 
 - Dan Kim
 - Richard Zhang
-- Xioashen Ma
+- Xiaoshen Ma
 - Kevin Zhou
