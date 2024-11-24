@@ -578,6 +578,67 @@ const getStreetSafetyScores = async (req, res) => {
   );
 };
 
+// MODIFY TO AVOID DIVISION BY 0
+
+// NEW Route: GET /crime_per_capita/:zipcode
+// Description: Computes crime per capita for a specific zip code.
+const getCrimePerCapitaByZipcode = async (req, res) => {
+  const { zipcode } = req.params;
+
+  connection.query(
+    `
+    SELECT pc.zip_code, 
+           COUNT(pc.object_id) AS crime_count, 
+           zp.population, 
+           (COUNT(pc.object_id) * 1.0) / zp.population AS crime_per_capita 
+    FROM crime_data AS pc
+    JOIN zipcode_population AS zp ON pc.zip_code = zp.zip_code
+    WHERE pc.zip_code = $1
+    GROUP BY pc.zip_code, zp.population
+    `,
+    [zipcode],
+    (err, data) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json([]);
+      } else if (data.rows.length === 0) {
+        res.status(404).json({ message: `No data found for zip code ${zipcode}` });
+      } else {
+        res.json(data.rows[0]); // Return the single result
+      }
+    }
+  );
+};
+
+// NEW Route: GET /average_house_price/:zipcode
+// Description: Fetches the average house price for a specific zip code
+const getAverageHousePriceByZip = async (req, res) => {
+  const { zipcode } = req.params;
+
+  connection.query(
+    `
+    SELECT 
+      zip_code,
+      AVG(market_value) AS avg_house_price
+    FROM properties
+    WHERE zip_code = $1
+    GROUP BY zip_code
+    `,
+    [zipcode],
+    (err, data) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal server error" });
+      } else if (data.rows.length === 0) {
+        res.status(404).json({ message: `No data found for zip code ${zipcode}` });
+      } else {
+        res.json(data.rows[0]); // Return the average house price for the specific zip code
+      }
+    }
+  );
+};
+
+
 module.exports = {
   getPropertyByAddress,
   getPropertiesInZip,
@@ -590,5 +651,7 @@ module.exports = {
   getStreetPatterns,
   getLowestCrimeZips,
   getInvestmentScores,
-  getStreetSafetyScores
+  getStreetSafetyScores,
+  getCrimePerCapitaByZipcode,
+  getAverageHousePriceByZip
 };

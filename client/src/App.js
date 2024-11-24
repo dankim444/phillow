@@ -4,6 +4,7 @@ import { indigo, amber } from '@mui/material/colors'
 import { createTheme } from "@mui/material/styles";
 import HomePage from './pages/HomePage';
 import PropertySearch from './pages/PropertySearch';
+import CrimeMap from './pages/Map';
 
 export const theme = createTheme({
   palette: {
@@ -12,7 +13,6 @@ export const theme = createTheme({
   },
 });
 
-// import CrimeMap from './pages/CrimeMap';
 // import StreetAnalysis from './pages/StreetAnalysis';
 // import InvestmentScores from './pages/InvestmentScores';
 
@@ -24,9 +24,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/property-search" element={<PropertySearch />} />
-          {/* <Route path="/crime-map" element={<CrimeMap />} />
-          <Route path="/street-analysis" element={<StreetAnalysis />} />
-          <Route path="/investment-scores" element={<InvestmentScores />} /> */}
+          <Route path="/crime-map" element={<CrimeMap />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
