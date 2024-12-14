@@ -26,9 +26,21 @@ const createDotIcon = (color) => {
   });
 };
 
+// Function to create a star icon for police stations
+// Using a Unicode star (★) and styling it with a larger size and blue color
+const createStarIcon = () => {
+  return L.divIcon({
+    className: "custom-marker",
+    html: `<div style="font-size:20px; color:blue;">★</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15], // Center the icon
+  });
+};
+
 export default function CrimeMap() {
   const [zipcode, setZipcode] = useState("");
   const [crimeData, setCrimeData] = useState([]);
+  const [policeStationData, setPoliceStationData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -41,6 +53,7 @@ export default function CrimeMap() {
 
     setLoading(true);
     setError("");
+    setPoliceStationData([]);
     try {
       const response = await fetch(`http://localhost:8080/crimes_in_zip/${zipcode}`);
       if (!response.ok) {
@@ -52,6 +65,17 @@ export default function CrimeMap() {
         setCrimeData([]);
       } else {
         setCrimeData(data);
+      }
+      const stationResponse = await fetch(`http://localhost:8080/police_stations/${zipcode}`);
+      if (!stationResponse.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      } 
+      const stationJson = await stationResponse.json();
+      if (stationJson.length === 0) {
+        setError("No police stations found for the given zip code.");
+        setPoliceStationData([]);
+      } else {
+        setPoliceStationData(stationJson);
       }
     } catch (err) {
       console.error("Error fetching crime data:", err);
@@ -95,7 +119,7 @@ export default function CrimeMap() {
       )}
 
       {/* Map Display */}
-      {crimeData.length > 0 && (
+      {(crimeData.length > 0 || policeStationData.length > 0) && (
         <MapContainer
           center={[39.9526, -75.1652]} // Default to Philadelphia coordinates
           zoom={12}
@@ -118,6 +142,22 @@ export default function CrimeMap() {
                 <Typography variant="body2">
                   <strong>Count:</strong> {crime.crime_count}
                 </Typography>
+              </Popup>
+            </Marker>
+          ))}
+          {policeStationData.map((station, index) => (
+            <Marker
+              key={index}
+              position={[station.lat, station.lng]}
+              icon={createStarIcon()}
+            >
+              <Popup>
+                <Typography variant="body2"><strong>Police Station</strong></Typography>
+                {station.location && (
+                  <Typography variant="body2">
+                    <strong>Address:</strong> {station.location}
+                  </Typography>
+                )}
               </Popup>
             </Marker>
           ))}

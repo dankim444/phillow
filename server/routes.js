@@ -19,6 +19,7 @@ connection.connect((err) => err && console.log(err));
 
 /** Basic Routes **/
 
+// [USED] [USED] [USED]
 // Route 1: GET /property/:address
 // Description: Base query to get specific house by address
 const getPropertyByAddress = async (req, res) => {
@@ -54,6 +55,7 @@ const getPropertyByAddress = async (req, res) => {
   );
 };
 
+// [USED] [USED] [USED]
 // Route 2: GET /properties_in_zip - might need to modify
 // Description: Parameterized query to get all houses in zipcode, filter by number_of_bathrooms, number_of_bedrooms,
 // total_livable_area, market_value. Handles null values with defaults.
@@ -144,6 +146,7 @@ const getCrimePerCapita = async (req, res) => {
   );
 };
 
+// [USED] [USED] [USED]
 // Route 4: GET /crimes_in_zip/:zipcode
 // Description: Simple query returning the coords (lat long) of all the crimes in a zip code as well as a count of
 // how many of each type of crime occurred in a zip code
@@ -176,7 +179,7 @@ const getPoliceStationsInZip = async (req, res) => {
 
   connection.query(
     `
-    SELECT location 
+    SELECT location, lat, lng 
     FROM police_stations 
     WHERE zip_code = $1
     `,
@@ -580,6 +583,7 @@ const getStreetSafetyScores = async (req, res) => {
 
 // MODIFY TO AVOID DIVISION BY 0
 
+// [USED] [USED] [USED]
 // NEW Route: GET /crime_per_capita/:zipcode
 // Description: Computes crime per capita for a specific zip code.
 const getCrimePerCapitaByZipcode = async (req, res) => {
@@ -610,6 +614,7 @@ const getCrimePerCapitaByZipcode = async (req, res) => {
   );
 };
 
+// [USED] [USED] [USED]
 // NEW Route: GET /average_house_price/:zipcode
 // Description: Fetches the average house price for a specific zip code
 const getAverageHousePriceByZip = async (req, res) => {
