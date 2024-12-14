@@ -40,7 +40,8 @@ const getPropertyByAddress = async (req, res) => {
       year_built,
       number_stories
     FROM properties 
-    WHERE location = $1
+    WHERE LOWER(location) LIKE LOWER($1 || '%')
+    ORDER BY location
     `,
     [address],
     (err, data) => {
@@ -284,6 +285,8 @@ Description: This query analyzes both property and crime patterns on individual 
 It aggregates the data to calculate metrics like average propety value, crime types, and crime freqeuncy. 
 */
 // UI - Help users identify streets with high property values or high crime activity.
+
+// duration: 6 s
 const getStreetPatterns = async (req, res) => {
   connection.query(
     `
@@ -347,6 +350,8 @@ const getStreetPatterns = async (req, res) => {
 Description: Complex query that allows a user to provide up to 3 crimes they are most worried about and then provides a sorted list of zipcodes with the
 lowest per capita crime of those types along with the average price of a property in the zipcode.
 */
+
+// duration: 343 ms
 const getLowestCrimeZips = async (req, res) => {
   const { crime_type1, crime_type2, crime_type3 } = req.query;
 
@@ -404,6 +409,8 @@ Description: This complex query analyzes property sales trends, safety, and mark
 for each area, considering factors like price trends, new construction, crime rate, and police station presence. It ranks the zip codes by
 investment potential, helping identify the most promising areas for real estate investment.
 */
+
+// duration: 2 s
 const getInvestmentScores = async (req, res) => {
   connection.query(
     `
@@ -505,6 +512,8 @@ Description: This query calculates a "safety score" for each street by combining
 where the score is weighted based on how the street's property values compare to the zip code average (30%), crime frequency (40%), and
 presence of police stations (30%), while filtering out streets with fewer than 5 properties.
 */
+
+// duration: 54 s
 const getStreetSafetyScores = async (req, res) => {
   connection.query(
     `
