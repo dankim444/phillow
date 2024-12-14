@@ -76,6 +76,20 @@ export default function HomePage() {
           >
             Compare Neighborhoods
           </Button>
+          <Button
+            variant="contained"
+            component={Link}
+            to="/insights"
+            sx={{
+              backgroundColor: "#6c5ce7",
+              "&:hover": { backgroundColor: "#4b4dae" },
+              padding: "12px",
+              fontSize: "1.1rem",
+              color: "#fff",
+            }}
+          >
+            Explore Insights
+          </Button>
         </Box>
       </Grid>
     </Box>

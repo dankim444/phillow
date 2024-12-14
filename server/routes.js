@@ -302,7 +302,6 @@ const getStreetPatterns = async (req, res) => {
         SELECT
             us.street_name,
             COUNT(DISTINCT p.object_id) AS num_properties,
-            ROUND(AVG(p.market_value), 2) AS avg_property_value,
             COUNT(DISTINCT p.category_code_description) AS property_types,
             MAX(p.year_built) AS newest_property,
             MIN(p.year_built) AS oldest_property
@@ -325,7 +324,9 @@ const getStreetPatterns = async (req, res) => {
     SELECT
         sp.street_name,
         sp.num_properties,
-        sp.avg_property_value,
+        sp.property_types,
+        sp.newest_property,
+        sp.oldest_property,
         sc.num_crimes,
         sc.crime_types,
         sc.avg_crime_hour,
@@ -335,7 +336,7 @@ const getStreetPatterns = async (req, res) => {
     FROM street_properties sp
     JOIN street_crimes sc ON sp.street_name = sc.street_name
     WHERE sp.num_properties >= 5
-    ORDER BY sc.num_crimes DESC
+    ORDER BY sc.num_crimes DESC;
     `,
     (err, data) => {
       if (err) {
@@ -591,7 +592,7 @@ const getStreetSafetyScores = async (req, res) => {
 };
 
 // NEW Route: GET /street_info
-/*
+/* [Kevin]
 Description: Gets info on every street (# of crimes on that street, # of properties, types of crimes committed broken down)
 average market value, etc
 */
@@ -788,5 +789,6 @@ module.exports = {
   getInvestmentScores,
   getStreetSafetyScores,
   getCrimePerCapitaByZipcode,
-  getAverageHousePriceByZip
+  getAverageHousePriceByZip,
+  getStreetInfo
 };

@@ -25,7 +25,7 @@ app.get("/investment_scores", routes.getInvestmentScores);
 app.get("/street_safety_scores", routes.getStreetSafetyScores);
 app.get("/crime_per_capita/:zipcode", routes.getCrimePerCapitaByZipcode);
 app.get("/average_house_price/:zipcode", routes.getAverageHousePriceByZip);
-
+app.get("/street_info", routes.getStreetInfo);
 
 
 app.listen(config.server_port, () => {
