@@ -26,7 +26,7 @@ export default function Insights() {
         fetchData("http://localhost:8080/street_info");
         break;
       case "zipcodeInfo":
-        fetchData("http://localhost:8080/average_house_price_over_population");
+        fetchData("http://localhost:8080/zipcode_info");
         break;
       default:
         setData([]);
@@ -55,6 +55,22 @@ export default function Insights() {
                 {
                   field: "property_count",
                   headerName: "Property Count",
+                  width: 150,
+                },
+                { field: "population", headerName: "Population", width: 150 },
+                {
+                  field: "total_crimes",
+                  headerName: "Total Crimes",
+                  width: 130,
+                },
+                {
+                  field: "police_stations",
+                  headerName: "Police Stations",
+                  width: 150,
+                },
+                {
+                  field: "crime_rate_per_capita",
+                  headerName: "Crime Rate Per Capita",
                   width: 200,
                 },
               ]}
