@@ -14,11 +14,8 @@ app.get("/crime_per_capita/:zipcode", routes.getCrimePerCapitaByZipcode); // don
 app.get("/crimes_in_zip/:zipcode", routes.getCrimesInZip); // done - CrimeMap.js
 app.get("/police_stations/:zipcode", routes.getPoliceStationsInZip); // done - CrimeMap.js
 app.get("/average_house_price/:zipcode", routes.getAverageHousePriceByZip); // done - PropertySearch.js
-app.get(
-  "/average_house_price_over_population",
-  routes.getAverageHousePriceForPopulatedZips
-);
 app.get("/street_data/:street_name", routes.getStreetData); // delete later
+app.get("/zipcode_info", routes.getZipCodeInfo); // done - Insights.js
 app.get("/street_patterns", routes.getStreetPatterns); // done - Insights.js
 app.get("/lowest_crime_zips", routes.getLowestCrimeZips);
 app.get("/investment_scores", routes.getInvestmentScores);

@@ -178,6 +178,7 @@ const getCrimesInZip = async (req, res) => {
   );
 };
 
+// [USED] [USED] [USED]
 // Route 5: GET /police_stations/:zipcode
 // Description: Simple query returning the location (address(es)) of the police station in the zip code (if any)
 const getPoliceStationsInZip = async (req, res) => {
@@ -232,32 +233,8 @@ const getAverageHousePriceByZip = async (req, res) => {
   );
 };
 
-// Route 7: GET /average_house_price_over_population
-// Description: Average house prices for zip codes
-const getAverageHousePriceForPopulatedZips = async (req, res) => {
-  connection.query(
-    `
-    SELECT
-      p.zip_code,
-      AVG(p.market_value) AS avg_market_value,
-      COUNT(p.object_id) AS property_count
-    FROM properties p
-    JOIN zipcode_population pop ON p.zip_code = pop.zip_code
-    GROUP BY p.zip_code
-    ORDER BY avg_market_value DESC
-    `,
-    (err, data) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json([]);
-      } else {
-        res.json(data.rows);
-      }
-    }
-  );
-};
-
-// Route 8: GET /street_data/:street_name
+// possibly delete due to redudancy with street_patterns
+// Route 7: GET /street_data/:street_name
 // Description: Total number of properties and crimes committed on a specific street
 const getStreetData = async (req, res) => {
   const streetName = req.params.street_name.toLowerCase();
@@ -286,6 +263,42 @@ const getStreetData = async (req, res) => {
 
 /** Complex queries **/
 
+// [USED] [USED] [USED]
+// Route 8: GET /zipcode_info
+// Description: Gets the average market value, property count, population, total crimes, police stations, and crime rate per capita for each zip code
+const getZipCodeInfo = async (req, res) => {
+  connection.query(
+    `
+    SELECT
+        p.zip_code,
+        AVG(p.market_value) AS avg_market_value,
+        COUNT(p.object_id) AS property_count,
+        zp.population,
+        COALESCE(COUNT(c.object_id), 0) AS total_crimes,
+        COALESCE(COUNT(ps.object_id), 0) AS police_stations,
+        ROUND((COALESCE(COUNT(c.object_id), 0)::DECIMAL / zp.population), 4) AS crime_rate_per_capita
+    FROM properties p
+    INNER JOIN zipcode_population zp ON p.zip_code = zp.zip_code
+    LEFT JOIN crime_data c ON c.zip_code = p.zip_code
+    LEFT JOIN police_stations ps ON ps.zip_code = p.zip_code
+    WHERE zp.population > 10000
+    GROUP BY
+        p.zip_code,
+        zp.population
+    ORDER BY avg_market_value DESC;
+    `,
+    (err, data) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json([]);
+      } else {
+        res.json(data.rows);
+      }
+    }
+  );
+};
+
+// [USED] [USED] [USED]
 // Route 9: GET /street_patterns
 /* 
 Description: This query analyzes both property and crime patterns on individual streets by extracting street names from property addresses and crime location blocks.
@@ -595,6 +608,7 @@ const getStreetSafetyScores = async (req, res) => {
   );
 };
 
+// [USED] [USED] [USED]
 // NEW Route: GET /street_info
 /* [Kevin]
 Description: Gets info on every street (# of crimes on that street, # of properties, types of crimes committed broken down)
@@ -723,7 +737,7 @@ module.exports = {
   getCrimesInZip,
   getPoliceStationsInZip,
   getAverageHousePriceByZip,
-  getAverageHousePriceForPopulatedZips,
+  getZipCodeInfo,
   getStreetData,
   getStreetPatterns,
   getLowestCrimeZips,
