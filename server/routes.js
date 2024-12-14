@@ -742,6 +742,129 @@ const getStreetInfo = async (req, res) => {
   );
 };
 
+const { exec } = require("child_process");
+const path = require("path");
+
+const getCrimesNearAddress = async (req, res) => {
+  const { address, radius } = req.body;
+
+  if (!address || !radius) {
+    return res.status(400).json({ error: "Address and radius are required" });
+  }
+
+  // Adjust the path to `geocoder.py` based on its actual location
+  const geocoderScript = path.resolve(__dirname, "../scripts", "geocoder.py");
+
+  try {
+    exec(`python3 ${geocoderScript} "${address}"`, (error, stdout, stderr) => {
+      if (error) {
+        console.error("Geocoder error:", error.message);
+        console.error("Error stack:", error.stack);
+        return res.status(500).json({ error: "Geocoding failed" });
+      }
+
+      if (stderr) {
+        console.error("Geocoder stderr:", stderr);
+        return res.status(500).json({ error: "Geocoding error" });
+      }
+
+      console.log("Geocoder output:", stdout);
+
+      try {
+        const geocodeResult = JSON.parse(stdout);
+
+        if (geocodeResult.error) {
+          return res.status(404).json({ error: "Address not found" });
+        }
+
+        const { latitude, longitude } = geocodeResult;
+
+        // Query the database for crimes and police stations
+        connection.query(
+          `
+          WITH crime_distances AS (
+              SELECT
+                  text_general_code AS crime_type,
+                  COUNT(*) AS crime_count,  -- Add this to count crimes
+                  MIN(dispatch_date) AS earliest_date, -- Optional: earliest crime date
+                  MIN(dispatch_time) AS earliest_time, -- Optional: earliest time
+                  zip_code,
+                  lat,
+                  lng,
+                  (
+                      6371 * ACOS(
+                          COS(RADIANS($1)) * COS(RADIANS(lat)) *
+                          COS(RADIANS(lng) - RADIANS($2)) +
+                          SIN(RADIANS($1)) * SIN(RADIANS(lat))
+                      )
+                  ) AS distance_km
+              FROM crime_data
+              GROUP BY text_general_code, zip_code, lat, lng
+          )
+          SELECT
+              crime_type as text_general_code,
+              crime_count,  -- Include the count of crimes
+              zip_code,
+              lat,
+              lng,
+              distance_km
+          FROM
+              crime_distances
+          WHERE
+              distance_km <= $3
+          ORDER BY
+              distance_km ASC;
+          `,
+          [latitude, longitude, radius],
+          (err, crimeData) => {
+            if (err) {
+              console.error("Database error:", err.message);
+              return res.status(500).json({ error: "Database query failed" });
+            }
+
+            connection.query(
+              `
+              WITH station_distances AS (
+                SELECT
+                  object_id,
+                  location,
+                  zip_code,
+                  lat,
+                  lng,
+                  (
+                    6371 * ACOS(
+                      COS(RADIANS($1)) * COS(RADIANS(lat)) *
+                      COS(RADIANS(lng) - RADIANS($2)) +
+                      SIN(RADIANS($1)) * SIN(RADIANS(lat))
+                    )
+                  ) AS distance_km
+                FROM police_stations
+              )
+              SELECT * FROM station_distances WHERE distance_km <= $3 ORDER BY distance_km ASC;
+              `,
+              [latitude, longitude, radius],
+              (err2, stationData) => {
+                if (err2) {
+                  console.error("Database error:", err2.message);
+                  return res.status(500).json({ error: "Database query failed" });
+                }
+
+                res.json({ crimes: crimeData.rows, stations: stationData.rows });
+              }
+            );
+          }
+        );
+      } catch (parseError) {
+        console.error("Parse error:", parseError.message);
+        return res.status(500).json({ error: "Invalid geocoding output" });
+      }
+    });
+  } catch (err) {
+    console.error("Unexpected error:", err.message);
+    return res.status(500).json({ error: "An unexpected error occurred" });
+  }
+};
+
 module.exports = {
   getPropertyByAddress,
   getPropertiesInZip,
@@ -756,4 +879,5 @@ module.exports = {
   getInvestmentScores,
   getStreetSafetyScores,
   getStreetInfo,
+  getCrimesNearAddress,
 };
