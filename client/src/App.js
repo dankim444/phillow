@@ -4,7 +4,7 @@ import { indigo, amber } from '@mui/material/colors'
 import { createTheme } from "@mui/material/styles";
 import HomePage from './pages/HomePage';
 import PropertySearch from './pages/PropertySearch';
-import CrimeMap from './pages/Map';
+import CrimeMap from './pages/CrimeMap';
 import Insights from "./pages/Insights";
 
 export const theme = createTheme({

@@ -45,9 +45,17 @@ export default function HomePage() {
             color: "#666", // Neutral gray for supporting text
           }}
         >
-          Discover properties, analyze neighborhoods, and uncover crime data in Philadelphia.
+          Discover properties, analyze neighborhoods, and uncover crime data in
+          Philadelphia.
         </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "20px", width: "100%" }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+            width: "100%",
+          }}
+        >
           <Button
             variant="contained"
             component={Link}
