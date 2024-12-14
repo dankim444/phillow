@@ -24,9 +24,9 @@ connection.connect((err) => err && console.log(err));
 // Description: Base query to get specific house by address
 const getPropertyByAddress = async (req, res) => {
   const address = req.params.address;
+  const zipcode = req.query.zipcode; // Get zipcode from query params
 
-  connection.query(
-    `
+  const query = `
     SELECT 
       location,
       zip_code,
@@ -42,18 +42,20 @@ const getPropertyByAddress = async (req, res) => {
       number_stories
     FROM properties 
     WHERE LOWER(location) LIKE LOWER($1 || '%')
+    ${zipcode ? 'AND zip_code = $2' : ''} 
     ORDER BY location
-    `,
-    [address],
-    (err, data) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({});
-      } else {
-        res.json(data.rows);
-      }
+  `;
+
+  const queryParams = zipcode ? [address, zipcode] : [address];
+
+  connection.query(query, queryParams, (err, data) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({});
+    } else {
+      res.json(data.rows);
     }
-  );
+  });
 };
 
 // [USED] [USED] [USED]
@@ -736,7 +738,9 @@ const getCrimePerCapitaByZipcode = async (req, res) => {
         console.error(err);
         res.status(500).json([]);
       } else if (data.rows.length === 0) {
-        res.status(404).json({ message: `No data found for zip code ${zipcode}` });
+        res
+          .status(404)
+          .json({ message: `No data found for zip code ${zipcode}` });
       } else {
         res.json(data.rows[0]); // Return the single result
       }
@@ -765,14 +769,15 @@ const getAverageHousePriceByZip = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Internal server error" });
       } else if (data.rows.length === 0) {
-        res.status(404).json({ message: `No data found for zip code ${zipcode}` });
+        res
+          .status(404)
+          .json({ message: `No data found for zip code ${zipcode}` });
       } else {
         res.json(data.rows[0]); // Return the average house price for the specific zip code
       }
     }
   );
 };
-
 
 module.exports = {
   getPropertyByAddress,
@@ -788,5 +793,5 @@ module.exports = {
   getInvestmentScores,
   getStreetSafetyScores,
   getCrimePerCapitaByZipcode,
-  getAverageHousePriceByZip
+  getAverageHousePriceByZip,
 };
