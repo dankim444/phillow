@@ -5,6 +5,7 @@ import { createTheme } from "@mui/material/styles";
 import HomePage from './pages/HomePage';
 import PropertySearch from './pages/PropertySearch';
 import CrimeMap from './pages/CrimeMap';
+import Insights from "./pages/Insights";
 
 export const theme = createTheme({
   palette: {
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/property-search" element={<PropertySearch />} />
           <Route path="/crime-map" element={<CrimeMap />} />
+          <Route path="/insights" element={<Insights />} />;
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
