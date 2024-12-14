@@ -119,14 +119,12 @@ const getPropertiesInZip = async (req, res) => {
   );
 };
 
-// Route 3: GET /crime_per_capita - maybe also create a new endpoint for getting the crime per capita BY zipcode, instead of FOR EACH zipcode
-// Description: Simple query to compute the Crime per Capita in Philadelphia Zipcode: Population Table, Crime Table, use groupby for zipcode,
-// count crimes, and then divide by population in the zip code
+// [USED] [USED] [USED]
+// Route 3: GET /crime_per_capita/:zipcode
+// Description: Computes crime per capita for a specific zip code.
+const getCrimePerCapitaByZipcode = async (req, res) => {
+  const { zipcode } = req.params;
 
-// UI - a page that displays zipcode safety score, which is the crime per capita for each zipcode
-// maybe add a slider or dropdown in the property search filter to enable users to only search for properties below a certain theshold (ie. < 0.04 crimes/person)
-// use the crime per capita data to create a leaderboard or highlight the safest zip codes in a heatmap.
-const getCrimePerCapita = async (req, res) => {
   connection.query(
     `
     SELECT pc.zip_code, 
@@ -135,15 +133,20 @@ const getCrimePerCapita = async (req, res) => {
            (COUNT(pc.object_id) * 1.0) / zp.population AS crime_per_capita 
     FROM crime_data AS pc
     JOIN zipcode_population AS zp ON pc.zip_code = zp.zip_code
+    WHERE pc.zip_code = $1
     GROUP BY pc.zip_code, zp.population
-    ORDER BY crime_per_capita DESC
     `,
+    [zipcode],
     (err, data) => {
       if (err) {
         console.error(err);
         res.status(500).json([]);
+      } else if (data.rows.length === 0) {
+        res
+          .status(404)
+          .json({ message: `No data found for zip code ${zipcode}` });
       } else {
-        res.json(data.rows);
+        res.json(data.rows[0]); // Return the single result
       }
     }
   );
@@ -198,33 +201,32 @@ const getPoliceStationsInZip = async (req, res) => {
   );
 };
 
-// Route 6: GET /average_house_price
-// Description: Simple query returning the average house price per zipcode
+// [USED] [USED] [USED]
+// Route 6: GET /average_house_price/:zipcode
+// Description: Fetches the average house price for a specific zip code
+const getAverageHousePriceByZip = async (req, res) => {
+  const { zipcode } = req.params;
 
-// UI - a page that displays the average house price for each zipcode in a table
-
-// Heatmap Legend:
-//Green: Affordable areas (e.g., <$300,000)
-//Yellow: Mid-range prices (e.g., $300,000–$500,000)
-//Red: Expensive areas (e.g., >$500,000)
-
-// Allow users to search for houses in a specific price range (ie. Average Price Range: [ $250,000 - $500,000 ])
-const getAverageHousePricePerZip = async (req, res) => {
   connection.query(
     `
     SELECT 
       zip_code,
-      AVG(market_value) AS avg_house_price 
-    FROM properties 
+      AVG(market_value) AS avg_house_price
+    FROM properties
+    WHERE zip_code = $1
     GROUP BY zip_code
-    ORDER BY avg_house_price DESC
     `,
+    [zipcode],
     (err, data) => {
       if (err) {
         console.error(err);
-        res.status(500).json([]);
+        res.status(500).json({ error: "Internal server error" });
+      } else if (data.rows.length === 0) {
+        res
+          .status(404)
+          .json({ message: `No data found for zip code ${zipcode}` });
       } else {
-        res.json(data.rows);
+        res.json(data.rows[0]); // Return the average house price for the specific zip code
       }
     }
   );
@@ -713,85 +715,17 @@ const getStreetInfo = async (req, res) => {
   );
 };
 
-// MODIFY TO AVOID DIVISION BY 0
-
-// [USED] [USED] [USED]
-// NEW Route: GET /crime_per_capita/:zipcode
-// Description: Computes crime per capita for a specific zip code.
-const getCrimePerCapitaByZipcode = async (req, res) => {
-  const { zipcode } = req.params;
-
-  connection.query(
-    `
-    SELECT pc.zip_code, 
-           COUNT(pc.object_id) AS crime_count, 
-           zp.population, 
-           (COUNT(pc.object_id) * 1.0) / zp.population AS crime_per_capita 
-    FROM crime_data AS pc
-    JOIN zipcode_population AS zp ON pc.zip_code = zp.zip_code
-    WHERE pc.zip_code = $1
-    GROUP BY pc.zip_code, zp.population
-    `,
-    [zipcode],
-    (err, data) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json([]);
-      } else if (data.rows.length === 0) {
-        res
-          .status(404)
-          .json({ message: `No data found for zip code ${zipcode}` });
-      } else {
-        res.json(data.rows[0]); // Return the single result
-      }
-    }
-  );
-};
-
-// [USED] [USED] [USED]
-// NEW Route: GET /average_house_price/:zipcode
-// Description: Fetches the average house price for a specific zip code
-const getAverageHousePriceByZip = async (req, res) => {
-  const { zipcode } = req.params;
-
-  connection.query(
-    `
-    SELECT 
-      zip_code,
-      AVG(market_value) AS avg_house_price
-    FROM properties
-    WHERE zip_code = $1
-    GROUP BY zip_code
-    `,
-    [zipcode],
-    (err, data) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({ error: "Internal server error" });
-      } else if (data.rows.length === 0) {
-        res
-          .status(404)
-          .json({ message: `No data found for zip code ${zipcode}` });
-      } else {
-        res.json(data.rows[0]); // Return the average house price for the specific zip code
-      }
-    }
-  );
-};
-
 module.exports = {
   getPropertyByAddress,
   getPropertiesInZip,
-  getCrimePerCapita,
+  getCrimePerCapitaByZipcode,
   getCrimesInZip,
   getPoliceStationsInZip,
-  getAverageHousePricePerZip,
+  getAverageHousePriceByZip,
   getAverageHousePriceForPopulatedZips,
   getStreetData,
   getStreetPatterns,
   getLowestCrimeZips,
   getInvestmentScores,
   getStreetSafetyScores,
-  getCrimePerCapitaByZipcode,
-  getAverageHousePriceByZip,
 };
