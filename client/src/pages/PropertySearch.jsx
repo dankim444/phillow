@@ -390,69 +390,41 @@ export default function PropertySearch() {
         )}
       {/* Property Display Section */}
       <Grid container spacing={3}>
-        {addressSearchResults.length > 0
-          ? // Map through address search results
-            currentAddresses.map((property, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Card sx={{ maxWidth: 345 }}>
-                  <CardMedia
-                    component="img"
-                    height="180"
-                    image={getPropertyImage(property.category_code_description)}
-                    alt={`${property.category_code_description} property`}
-                  />
-                  <CardContent>
-                    <Typography variant="h6">{property.location}</Typography>
-                    <Typography>
-                      <strong>Zip Code:</strong> {property.zip_code}
-                    </Typography>
-                    <Typography>
-                      <strong>Market Value:</strong> ${property.market_value}
-                    </Typography>
-                    <Typography>
-                      <strong>Sale Price:</strong> ${property.sale_price}
-                    </Typography>
-                    <Typography>
-                      <strong>Bathrooms:</strong> {property.number_of_bathrooms}
-                    </Typography>
-                    <Typography>
-                      <strong>Bedrooms:</strong> {property.number_of_bedrooms}
-                    </Typography>
-                    <Typography>
-                      <strong>Year Built:</strong> {property.year_built}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))
-          : // Map through zip code search results
-            currentAddresses.map((property, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Card sx={{ maxWidth: 345 }}>
-                  <CardMedia
-                    component="img"
-                    height="180"
-                    image={getPropertyImage(property.category_code_description)}
-                    alt={`${property.category_code_description} property`}
-                  />
-                  <CardContent>
-                    <Typography variant="h6">{property.location}</Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Market Value: ${property.market_value}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Bedrooms: {property.number_of_bedrooms}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Bathrooms: {property.number_of_bathrooms}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Year Built: {property.year_built}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+        {currentAddresses.map((property, index) => (
+          <Grid item xs={12} sm={6} md={4} key={index}>
+            <Card sx={{ maxWidth: 345 }}>
+              <CardMedia
+                component="img"
+                height="180"
+                image={getPropertyImage(property.category_code_description)}
+                alt={`${property.category_code_description} property`}
+              />
+              <CardContent>
+                <Typography variant="h6">{property.location}</Typography>
+                <Typography>
+                  <strong>Zip Code:</strong> {property.zip_code}
+                </Typography>
+                <Typography>
+                  <strong>Market Value:</strong> $
+                  {Number(property.market_value)}
+                </Typography>
+                <Typography>
+                  <strong>Sale Price:</strong> ${Number(property.sale_price)}
+                </Typography>
+                <Typography>
+                  <strong>Bathrooms:</strong>{" "}
+                  {Number(property.number_of_bathrooms)}
+                </Typography>
+                <Typography>
+                  <strong>Bedrooms:</strong> {property.number_of_bedrooms}
+                </Typography>
+                <Typography>
+                  <strong>Year Built:</strong> {property.year_built}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
 
       {/* Pagination */}
