@@ -269,22 +269,34 @@ const getStreetData = async (req, res) => {
 const getZipCodeInfo = async (req, res) => {
   connection.query(
     `
+    WITH zip_crimes AS (
+      SELECT zip_code, COUNT(*) as crime_count
+      FROM crime_data
+      GROUP BY zip_code
+    ),
+    zip_police AS (
+      SELECT zip_code, COUNT(*) as station_count
+      FROM police_stations
+      GROUP BY zip_code
+    )
     SELECT
-        p.zip_code,
-        AVG(p.market_value) AS avg_market_value,
-        COUNT(p.object_id) AS property_count,
-        zp.population,
-        COALESCE(COUNT(c.object_id), 0) AS total_crimes,
-        COALESCE(COUNT(ps.object_id), 0) AS police_stations,
-        ROUND((COALESCE(COUNT(c.object_id), 0)::DECIMAL / zp.population), 4) AS crime_rate_per_capita
+      p.zip_code,
+      ROUND(AVG(p.market_value)::NUMERIC, 2) AS avg_market_value,
+      COUNT(p.object_id) AS property_count,
+      zp.population,
+      COALESCE(c.crime_count, 0) AS total_crimes,
+      COALESCE(ps.station_count, 0) AS police_stations,
+      ROUND((COALESCE(c.crime_count, 0)::DECIMAL / zp.population), 4) AS crime_rate_per_capita
     FROM properties p
     INNER JOIN zipcode_population zp ON p.zip_code = zp.zip_code
-    LEFT JOIN crime_data c ON c.zip_code = p.zip_code
-    LEFT JOIN police_stations ps ON ps.zip_code = p.zip_code
+    LEFT JOIN zip_crimes c ON c.zip_code = p.zip_code
+    LEFT JOIN zip_police ps ON ps.zip_code = p.zip_code
     WHERE zp.population > 10000
-    GROUP BY
-        p.zip_code,
-        zp.population
+    GROUP BY 
+      p.zip_code, 
+      zp.population, 
+      c.crime_count, 
+      ps.station_count
     ORDER BY avg_market_value DESC;
     `,
     (err, data) => {
