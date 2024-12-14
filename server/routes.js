@@ -291,7 +291,6 @@ const getZipCodeInfo = async (req, res) => {
     INNER JOIN zipcode_population zp ON p.zip_code = zp.zip_code
     LEFT JOIN zip_crimes c ON c.zip_code = p.zip_code
     LEFT JOIN zip_police ps ON ps.zip_code = p.zip_code
-    WHERE zp.population > 10000
     GROUP BY 
       p.zip_code, 
       zp.population, 
