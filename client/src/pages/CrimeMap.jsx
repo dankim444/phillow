@@ -27,7 +27,6 @@ const createDotIcon = (color) => {
 };
 
 // Function to create a star icon for police stations
-// Using a Unicode star (★) and styling it with a larger size and blue color
 const createStarIcon = () => {
   return L.divIcon({
     className: "custom-marker",
@@ -38,14 +37,16 @@ const createStarIcon = () => {
 };
 
 export default function CrimeMap() {
-  const [zipcode, setZipcode] = useState("");
+  const [zipcode, setZipcode] = useState(""); // Zip code for search
+  const [address, setAddress] = useState(""); // Address for search
+  const [radius, setRadius] = useState(1); // Radius for address-based search
   const [crimeData, setCrimeData] = useState([]);
   const [policeStationData, setPoliceStationData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch crimes data by zip code
-  const fetchCrimeData = async () => {
+  // Fetch crimes and police stations by zip code
+  const fetchCrimeDataByZip = async () => {
     if (!zipcode) {
       setError("Please enter a zip code.");
       return;
@@ -53,7 +54,9 @@ export default function CrimeMap() {
 
     setLoading(true);
     setError("");
+    setCrimeData([]);
     setPoliceStationData([]);
+
     try {
       const response = await fetch(`http://localhost:8080/crimes_in_zip/${zipcode}`);
       if (!response.ok) {
@@ -68,18 +71,54 @@ export default function CrimeMap() {
       }
       const stationResponse = await fetch(`http://localhost:8080/police_stations/${zipcode}`);
       if (!stationResponse.ok) {
+        throw new Error(`HTTP error! status: ${stationResponse.status}`);
+      }
+      const stationData = await stationResponse.json();
+      setPoliceStationData(stationData.length > 0 ? stationData : []);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setError("Failed to fetch data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch crimes and police stations by address
+  const fetchCrimeDataByAddress = async () => {
+    if (!address) {
+      setError("Please enter an address.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setCrimeData([]);
+    setPoliceStationData([]);
+
+    try {
+      const response = await fetch("http://localhost:8080/crime_near_address", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ address, radius }),
+      });
+
+      if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
-      } 
-      const stationJson = await stationResponse.json();
-      if (stationJson.length === 0) {
-        setError("No police stations found for the given zip code.");
-        setPoliceStationData([]);
+      }
+
+      const data = await response.json();
+
+      if (!data.crimes.length && !data.stations.length) {
+        setError("No data found for the given address.");
       } else {
-        setPoliceStationData(stationJson);
+        setCrimeData(data.crimes || []);
+        setPoliceStationData(data.stations || []);
       }
     } catch (err) {
-      console.error("Error fetching crime data:", err);
-      setError("Failed to fetch crime data. Please try again.");
+      console.error("Error fetching data:", err);
+      setError("Failed to fetch data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -91,10 +130,10 @@ export default function CrimeMap() {
         Crime Map
       </Typography>
       <Typography variant="body1" color="textSecondary" gutterBottom>
-        Enter a zip code to view crimes and their locations.
+        Search by zip code or address to view crimes and police stations nearby.
       </Typography>
 
-      {/* Zip Code Input */}
+      {/* Zip Code Search */}
       <Box sx={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
         <TextField
           label="Enter Zip Code"
@@ -103,8 +142,30 @@ export default function CrimeMap() {
           onChange={(e) => setZipcode(e.target.value)}
           sx={{ marginRight: "10px", width: "300px" }}
         />
-        <Button variant="contained" size="large" onClick={fetchCrimeData}>
-          Search
+        <Button variant="contained" size="large" onClick={fetchCrimeDataByZip}>
+          Search by Zip Code
+        </Button>
+      </Box>
+
+      {/* Address Search */}
+      <Box sx={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
+        <TextField
+          label="Enter Address"
+          variant="outlined"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          sx={{ marginRight: "10px", width: "300px" }}
+        />
+        <TextField
+          label="Radius (km)"
+          type="number"
+          variant="outlined"
+          value={radius}
+          onChange={(e) => setRadius(e.target.value)}
+          sx={{ marginRight: "10px", width: "150px" }}
+        />
+        <Button variant="contained" size="large" onClick={fetchCrimeDataByAddress}>
+          Search by Address
         </Button>
       </Box>
 
@@ -115,14 +176,14 @@ export default function CrimeMap() {
         </Typography>
       )}
       {loading && (
-        <Typography sx={{ marginBottom: "20px" }}>Loading crime data...</Typography>
+        <Typography sx={{ marginBottom: "20px" }}>Loading data...</Typography>
       )}
 
       {/* Map Display */}
       {(crimeData.length > 0 || policeStationData.length > 0) && (
         <MapContainer
           center={[39.9526, -75.1652]} // Default to Philadelphia coordinates
-          zoom={12}
+          zoom={13}
           style={{ height: "500px", width: "100%", borderRadius: "8px" }}
         >
           <TileLayer
@@ -133,11 +194,11 @@ export default function CrimeMap() {
             <Marker
               key={index}
               position={[crime.lat, crime.lng]}
-              icon={createDotIcon(getMarkerColor(crime.crime_count))} // Dynamically set icon color
+              icon={createDotIcon(getMarkerColor(crime.crime_count))}
             >
               <Popup>
                 <Typography variant="body2">
-                  <strong>Type:</strong> {crime.text_general_code}
+                <strong>Type:</strong> {crime.text_general_code}
                 </Typography>
                 <Typography variant="body2">
                   <strong>Count:</strong> {crime.crime_count}
