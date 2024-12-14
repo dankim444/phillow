@@ -42,7 +42,7 @@ const getPropertyByAddress = async (req, res) => {
       number_stories
     FROM properties 
     WHERE LOWER(location) LIKE LOWER($1 || '%')
-    ${zipcode ? 'AND zip_code = $2' : ''} 
+    ${zipcode ? "AND zip_code = $2" : ""} 
     ORDER BY location
   `;
 
@@ -233,7 +233,7 @@ const getAverageHousePriceByZip = async (req, res) => {
 };
 
 // Route 7: GET /average_house_price_over_population
-// Description: Average house prices for zip codes with more than 10,000 population
+// Description: Average house prices for zip codes
 const getAverageHousePriceForPopulatedZips = async (req, res) => {
   connection.query(
     `
@@ -243,8 +243,8 @@ const getAverageHousePriceForPopulatedZips = async (req, res) => {
       COUNT(p.object_id) AS property_count
     FROM properties p
     JOIN zipcode_population pop ON p.zip_code = pop.zip_code
-    WHERE pop.population > 10000
     GROUP BY p.zip_code
+    ORDER BY avg_market_value DESC
     `,
     (err, data) => {
       if (err) {
@@ -729,7 +729,5 @@ module.exports = {
   getLowestCrimeZips,
   getInvestmentScores,
   getStreetSafetyScores,
-  getCrimePerCapitaByZipcode,
-  getAverageHousePriceByZip,
-  getStreetInfo
+  getStreetInfo,
 };

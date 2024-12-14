@@ -18,15 +18,12 @@ app.get(
   "/average_house_price_over_population",
   routes.getAverageHousePriceForPopulatedZips
 );
-app.get("/street_data/:street_name", routes.getStreetData);
-app.get("/street_patterns", routes.getStreetPatterns);
+app.get("/street_data/:street_name", routes.getStreetData); // delete later
+app.get("/street_patterns", routes.getStreetPatterns); // done - Insights.js
 app.get("/lowest_crime_zips", routes.getLowestCrimeZips);
 app.get("/investment_scores", routes.getInvestmentScores);
 app.get("/street_safety_scores", routes.getStreetSafetyScores);
-app.get("/crime_per_capita/:zipcode", routes.getCrimePerCapitaByZipcode);
-app.get("/average_house_price/:zipcode", routes.getAverageHousePriceByZip);
-app.get("/street_info", routes.getStreetInfo);
-
+app.get("/street_info", routes.getStreetInfo); // done - Insights.js
 
 app.listen(config.server_port, () => {
   console.log(
