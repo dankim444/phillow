@@ -83,15 +83,44 @@ export default function PropertySearch() {
   // Handle Specific Address Search
   const handleSearchByAddress = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8080/property/${encodeURIComponent(address)}`
-      );
+      // Construct URL with optional zipcode parameter
+      const url = new URL(`http://localhost:8080/property/${encodeURIComponent(address)}`);
+      if (zipcode) {
+        url.searchParams.append('zipcode', zipcode);
+      }
+  
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       setAddressSearchResults(data);
       setProperties([]); // Clear zip code search results
+  
+      // If zipcode is provided, also fetch zipcode-related data
+      if (zipcode) {
+        // Fetch crime stats
+        const crimeResponse = await fetch(
+          `http://localhost:8080/crime_per_capita/${zipcode}`
+        );
+        if (crimeResponse.ok) {
+          const crimeData = await crimeResponse.json();
+          setCrimeStats(crimeData);
+        }
+  
+        // Fetch average house price
+        const avgPriceResponse = await fetch(
+          `http://localhost:8080/average_house_price/${zipcode}`
+        );
+        if (avgPriceResponse.ok) {
+          const price = await avgPriceResponse.json();
+          setAvgHousePrice(price);
+        }
+      } else {
+        // Clear zipcode-related data if no zipcode provided
+        setCrimeStats(null);
+        setAvgHousePrice("");
+      }
     } catch (error) {
       console.error("Error fetching property by address:", error);
       setAddressSearchResults([]);
