@@ -42,6 +42,7 @@ const getPropertyByAddress = async (req, res) => {
     FROM properties 
     WHERE LOWER(location) LIKE LOWER($1 || '%')
     ORDER BY location
+    LIMIT 10
     `,
     [address],
     (err, data) => {
@@ -611,7 +612,9 @@ const getCrimePerCapitaByZipcode = async (req, res) => {
         console.error(err);
         res.status(500).json([]);
       } else if (data.rows.length === 0) {
-        res.status(404).json({ message: `No data found for zip code ${zipcode}` });
+        res
+          .status(404)
+          .json({ message: `No data found for zip code ${zipcode}` });
       } else {
         res.json(data.rows[0]); // Return the single result
       }
@@ -639,14 +642,15 @@ const getAverageHousePriceByZip = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Internal server error" });
       } else if (data.rows.length === 0) {
-        res.status(404).json({ message: `No data found for zip code ${zipcode}` });
+        res
+          .status(404)
+          .json({ message: `No data found for zip code ${zipcode}` });
       } else {
         res.json(data.rows[0]); // Return the average house price for the specific zip code
       }
     }
   );
 };
-
 
 module.exports = {
   getPropertyByAddress,
@@ -662,5 +666,5 @@ module.exports = {
   getInvestmentScores,
   getStreetSafetyScores,
   getCrimePerCapitaByZipcode,
-  getAverageHousePriceByZip
+  getAverageHousePriceByZip,
 };
