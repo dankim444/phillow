@@ -129,6 +129,29 @@ export default function PropertySearch() {
     }
   };
 
+  // gets property image
+  const getPropertyImage = (propertyType) => {
+    const type = propertyType?.toLowerCase();
+    
+    const imageMap = {
+      'multi family': '/images/multi-family.jpg',
+      'single family': '/images/single-family.jpg',
+      'garage - residential': '/images/garage-residential.jpg',
+      'mixed use': '/images/mixed-use.jpg',
+      'apartments  > 4 units': '/images/large-apartment.jpg',
+      'vacant land - residential': '/images/vacant-residential.jpg',
+      'commercial': '/images/commercial.jpg',
+      'special purpose': '/images/special-purpose.jpg',
+      'industrial': '/images/industrial.jpg',
+      'garage - commercial': '/images/garage-commercial.jpg',
+      'vacant land': '/images/vacant-land.jpg',
+      'offices': '/images/offices.jpg',
+      'retail': '/images/retail.jpg'
+    };
+  
+    return imageMap[type] || '/images/default-property.jpg';
+  };
+
   // Handle Pagination
   const startIndex = (currentPage - 1) * propertiesPerPage;
   const endIndex = startIndex + propertiesPerPage;
@@ -359,8 +382,8 @@ export default function PropertySearch() {
                   <CardMedia
                     component="img"
                     height="180"
-                    image="https://via.placeholder.com/300x180.png?text=Property+Image"
-                    alt="Property Image"
+                    image={getPropertyImage(property.category_code_description)}
+                    alt={`${property.category_code_description} property`}
                   />
                   <CardContent>
                     <Typography variant="h6">{property.location}</Typography>
@@ -393,8 +416,8 @@ export default function PropertySearch() {
                   <CardMedia
                     component="img"
                     height="180"
-                    image="https://via.placeholder.com/300x180.png?text=Property+Image"
-                    alt="Property Image"
+                    image={getPropertyImage(property.category_code_description)}
+                    alt={`${property.category_code_description} property`}
                   />
                   <CardContent>
                     <Typography variant="h6">{property.location}</Typography>
