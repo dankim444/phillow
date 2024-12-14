@@ -233,34 +233,6 @@ const getAverageHousePriceByZip = async (req, res) => {
   );
 };
 
-// possibly delete due to redudancy with street_patterns
-// Route 7: GET /street_data/:street_name
-// Description: Total number of properties and crimes committed on a specific street
-const getStreetData = async (req, res) => {
-  const streetName = req.params.street_name.toLowerCase();
-
-  connection.query(
-    `
-    SELECT
-      COUNT(DISTINCT p.object_id) AS num_properties,
-      COUNT(DISTINCT c.object_id) AS num_crimes
-    FROM properties p
-    CROSS JOIN crime_data c
-    WHERE p.location LIKE $1
-      AND c.location_block LIKE $2
-    `,
-    [`%${streetName}%`, `%${streetName}%`],
-    (err, data) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json([]);
-      } else {
-        res.json(data.rows[0]); // Return a single object with counts
-      }
-    }
-  );
-};
-
 /** Complex queries **/
 
 // [USED] [USED] [USED]
@@ -749,7 +721,6 @@ module.exports = {
   getPoliceStationsInZip,
   getAverageHousePriceByZip,
   getZipCodeInfo,
-  getStreetData,
   getStreetPatterns,
   getLowestCrimeZips,
   getInvestmentScores,
