@@ -21,10 +21,10 @@ connection.connect((err) => err && console.log(err));
 
 // [USED] [USED] [USED]
 // Route 1: GET /property/:address
-// Description: Base query to get specific house by address
+// Description: Base query to get specific house by address and optionally by zipcode
 const getPropertyByAddress = async (req, res) => {
   const address = req.params.address;
-  const zipcode = req.query.zipcode; // Get zipcode from query params
+  const zipcode = req.query.zipcode;
 
   const query = `
     SELECT 
@@ -41,7 +41,7 @@ const getPropertyByAddress = async (req, res) => {
       year_built,
       number_stories
     FROM properties 
-    WHERE LOWER(location) LIKE LOWER($1 || '%')
+    WHERE LOWER(location) LIKE LOWER('%' || $1 || '%')
     ${zipcode ? "AND zip_code = $2" : ""} 
     ORDER BY location
   `;
@@ -59,7 +59,7 @@ const getPropertyByAddress = async (req, res) => {
 };
 
 // [USED] [USED] [USED]
-// Route 2: GET /properties_in_zip - might need to modify
+// Route 2: GET /properties_in_zip
 // Description: Parameterized query to get all houses in zipcode, filter by number_of_bathrooms, number_of_bedrooms,
 // total_livable_area, market_value. Handles null values with defaults.
 const getPropertiesInZip = async (req, res) => {
@@ -73,10 +73,10 @@ const getPropertiesInZip = async (req, res) => {
     max_livable_area,
     min_market_value,
     max_market_value,
+    address,
   } = req.query;
 
-  connection.query(
-    `
+  const query = `
     SELECT 
       location,
       zip_code,
@@ -96,27 +96,43 @@ const getPropertiesInZip = async (req, res) => {
       AND number_of_bedrooms BETWEEN COALESCE($4, 0) AND COALESCE($5, 100)
       AND total_livable_area BETWEEN COALESCE($6, 0) AND COALESCE($7, 100000)
       AND market_value BETWEEN COALESCE($8, 0) AND COALESCE($9, 1000000000)
-    `,
-    [
-      zipcode,
-      min_bathrooms,
-      max_bathrooms,
-      min_bedrooms,
-      max_bedrooms,
-      min_livable_area,
-      max_livable_area,
-      min_market_value,
-      max_market_value,
-    ],
-    (err, data) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json([]);
-      } else {
-        res.json(data.rows);
-      }
+      ${address ? "AND LOWER(location) LIKE LOWER('%' || $10 || '%')" : ""}
+
+    `;
+
+  const queryParams = address
+    ? [
+        zipcode,
+        min_bathrooms,
+        max_bathrooms,
+        min_bedrooms,
+        max_bedrooms,
+        min_livable_area,
+        max_livable_area,
+        min_market_value,
+        max_market_value,
+        address,
+      ]
+    : [
+        zipcode,
+        min_bathrooms,
+        max_bathrooms,
+        min_bedrooms,
+        max_bedrooms,
+        min_livable_area,
+        max_livable_area,
+        min_market_value,
+        max_market_value,
+      ];
+
+  connection.query(query, queryParams, (err, data) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json([]);
+    } else {
+      res.json(data.rows);
     }
-  );
+  });
 };
 
 // [USED] [USED] [USED]

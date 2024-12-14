@@ -5,7 +5,7 @@ const routes = require("./routes");
 
 const app = express();
 app.use(cors({ origin: "*" }));
-app.use(express.json()); // Enable JSON parsing for POST requests
+app.use(express.json());
 
 // define endpoints
 app.get("/property/:address", routes.getPropertyByAddress); // done - PropertySearch.js

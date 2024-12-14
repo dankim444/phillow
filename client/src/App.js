@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { CssBaseline, ThemeProvider } from '@mui/material'
-import { indigo, amber } from '@mui/material/colors'
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import { indigo, amber } from "@mui/material/colors";
 import { createTheme } from "@mui/material/styles";
-import HomePage from './pages/HomePage';
-import PropertySearch from './pages/PropertySearch';
-import CrimeMap from './pages/CrimeMap';
+import HomePage from "./pages/HomePage";
+import PropertySearch from "./pages/PropertySearch";
+import CrimeMap from "./pages/CrimeMap";
 import Insights from "./pages/Insights";
 
 export const theme = createTheme({
@@ -13,9 +13,6 @@ export const theme = createTheme({
     secondary: amber,
   },
 });
-
-// import StreetAnalysis from './pages/StreetAnalysis';
-// import InvestmentScores from './pages/InvestmentScores';
 
 export default function App() {
   return (

@@ -35,15 +35,23 @@ export default function PropertySearch() {
   // Handle Zip Code and Filter Search
   const handleSearchByZip = async () => {
     try {
-      const propertiesParams = new URLSearchParams({
-        zipcode,
-        ...filters,
-      });
+      const propertiesURL = new URL("http://localhost:8080/properties_in_zip");
+      propertiesURL.searchParams.append("zipcode", zipcode);
 
-      // Fetch properties by zip code
-      const propertiesResponse = await fetch(
-        `http://localhost:8080/properties_in_zip?${propertiesParams.toString()}`
-      );
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            propertiesURL.searchParams.append(key, value);
+          }
+        });
+      }
+
+      if (address) {
+        propertiesURL.searchParams.append("address", address);
+      }
+
+      // Fetch properties by zip code and optionally by filters and address
+      const propertiesResponse = await fetch(propertiesURL);
       if (!propertiesResponse.ok) {
         throw new Error(`HTTP error! status: ${propertiesResponse.status}`);
       }
@@ -156,7 +164,7 @@ export default function PropertySearch() {
   const startIndex = (currentPage - 1) * propertiesPerPage;
   const endIndex = startIndex + propertiesPerPage;
   const currentProperties = properties.slice(startIndex, endIndex);
-  const currentResults =
+  const currentAddresses =
     addressSearchResults.length > 0
       ? addressSearchResults.slice(startIndex, endIndex)
       : currentProperties;
@@ -322,7 +330,9 @@ export default function PropertySearch() {
             marginBottom: "20px",
           }}
         >
-          <Typography variant="h6">Safety Information for Zip Code </Typography>
+          <Typography variant="h6">
+            Safety Information for Zip Code: {zipcode}{" "}
+          </Typography>
           <Typography>
             <strong>Population:</strong> {crimeStats.population}
           </Typography>
@@ -348,7 +358,9 @@ export default function PropertySearch() {
             marginBottom: "20px",
           }}
         >
-          <Typography variant="h6">Average House Price for Zip Code</Typography>
+          <Typography variant="h6">
+            Average House Price for Zip Code: {zipcode}
+          </Typography>
           <Typography>
             <strong>Average Price:</strong> $
             {Number(avgHousePrice.avg_house_price).toFixed(0)}
@@ -380,7 +392,7 @@ export default function PropertySearch() {
       <Grid container spacing={3}>
         {addressSearchResults.length > 0
           ? // Map through address search results
-            currentResults.map((property, index) => (
+            currentAddresses.map((property, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
                 <Card sx={{ maxWidth: 345 }}>
                   <CardMedia
@@ -414,7 +426,7 @@ export default function PropertySearch() {
               </Grid>
             ))
           : // Map through zip code search results
-            currentProperties.map((property, index) => (
+            currentAddresses.map((property, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
                 <Card sx={{ maxWidth: 345 }}>
                   <CardMedia
