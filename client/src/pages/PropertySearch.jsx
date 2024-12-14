@@ -84,11 +84,13 @@ export default function PropertySearch() {
   const handleSearchByAddress = async () => {
     try {
       // Construct URL with optional zipcode parameter
-      const url = new URL(`http://localhost:8080/property/${encodeURIComponent(address)}`);
+      const url = new URL(
+        `http://localhost:8080/property/${encodeURIComponent(address)}`
+      );
       if (zipcode) {
-        url.searchParams.append('zipcode', zipcode);
+        url.searchParams.append("zipcode", zipcode);
       }
-  
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -96,7 +98,7 @@ export default function PropertySearch() {
       const data = await response.json();
       setAddressSearchResults(data);
       setProperties([]); // Clear zip code search results
-  
+
       // If zipcode is provided, also fetch zipcode-related data
       if (zipcode) {
         // Fetch crime stats
@@ -107,7 +109,7 @@ export default function PropertySearch() {
           const crimeData = await crimeResponse.json();
           setCrimeStats(crimeData);
         }
-  
+
         // Fetch average house price
         const avgPriceResponse = await fetch(
           `http://localhost:8080/average_house_price/${zipcode}`
@@ -161,7 +163,7 @@ export default function PropertySearch() {
           Find Your Dream Home
         </Typography>
         <Typography variant="body1" color="textSecondary" gutterBottom>
-          Search for properties in your desired neighborhood by zip code or
+          Search for properties in your desired neighborhood by zip code and/or
           specific address.
         </Typography>
 
@@ -262,6 +264,22 @@ export default function PropertySearch() {
               />
             </Grid>
           </Grid>
+          {/* Apply Filters Button */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "20px",
+            }}
+          >
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleSearchByZip}
+            >
+              Apply Filters
+            </Button>
+          </Box>
         </Box>
       }
 
