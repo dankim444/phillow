@@ -330,9 +330,7 @@ export default function PropertySearch() {
             marginBottom: "20px",
           }}
         >
-          <Typography variant="h6">
-            Safety Information for Zip Code: {zipcode}{" "}
-          </Typography>
+          <Typography variant="h6">Safety Information for Zip Code </Typography>
           <Typography>
             <strong>Population:</strong> {crimeStats.population}
           </Typography>
@@ -358,9 +356,7 @@ export default function PropertySearch() {
             marginBottom: "20px",
           }}
         >
-          <Typography variant="h6">
-            Average House Price for Zip Code: {zipcode}
-          </Typography>
+          <Typography variant="h6">Average House Price for Zip Code</Typography>
           <Typography>
             <strong>Average Price:</strong> $
             {Number(avgHousePrice.avg_house_price).toFixed(0)}
@@ -412,11 +408,10 @@ export default function PropertySearch() {
                   <strong>Sale Price:</strong> ${Number(property.sale_price)}
                 </Typography>
                 <Typography>
-                  <strong>Bathrooms:</strong>{" "}
-                  {Number(property.number_of_bathrooms)}
+                  <strong>Type:</strong> {property.category_code_description}
                 </Typography>
                 <Typography>
-                  <strong>Bedrooms:</strong> {property.number_of_bedrooms}
+                  <strong>Area:</strong> {property.total_livable_area} sqft
                 </Typography>
                 <Typography>
                   <strong>Year Built:</strong> {property.year_built}
