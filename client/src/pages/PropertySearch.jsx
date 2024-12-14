@@ -132,30 +132,34 @@ export default function PropertySearch() {
   // gets property image
   const getPropertyImage = (propertyType) => {
     const type = propertyType?.toLowerCase();
-    
+
     const imageMap = {
-      'multi family': '/images/multi-family.jpg',
-      'single family': '/images/single-family.jpg',
-      'garage - residential': '/images/garage-residential.jpg',
-      'mixed use': '/images/mixed-use.jpg',
-      'apartments  > 4 units': '/images/large-apartment.jpg',
-      'vacant land - residential': '/images/vacant-residential.jpg',
-      'commercial': '/images/commercial.jpg',
-      'special purpose': '/images/special-purpose.jpg',
-      'industrial': '/images/industrial.jpg',
-      'garage - commercial': '/images/garage-commercial.jpg',
-      'vacant land': '/images/vacant-land.jpg',
-      'offices': '/images/offices.jpg',
-      'retail': '/images/retail.jpg'
+      "multi family": "/images/multi-family.jpg",
+      "single family": "/images/single-family.jpg",
+      "garage - residential": "/images/garage-residential.jpg",
+      "mixed use": "/images/mixed-use.jpg",
+      "apartments  > 4 units": "/images/large-apartment.jpg",
+      "vacant land - residential": "/images/vacant-residential.jpg",
+      commercial: "/images/commercial.jpg",
+      "special purpose": "/images/special-purpose.jpg",
+      industrial: "/images/industrial.jpg",
+      "garage - commercial": "/images/garage-commercial.jpg",
+      "vacant land": "/images/vacant-land.jpg",
+      offices: "/images/offices.jpg",
+      retail: "/images/retail.jpg",
     };
-  
-    return imageMap[type] || '/images/default-property.jpg';
+
+    return imageMap[type] || "/images/default-property.jpg";
   };
 
   // Handle Pagination
   const startIndex = (currentPage - 1) * propertiesPerPage;
   const endIndex = startIndex + propertiesPerPage;
   const currentProperties = properties.slice(startIndex, endIndex);
+  const currentResults =
+    addressSearchResults.length > 0
+      ? addressSearchResults.slice(startIndex, endIndex)
+      : currentProperties;
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
@@ -376,7 +380,7 @@ export default function PropertySearch() {
       <Grid container spacing={3}>
         {addressSearchResults.length > 0
           ? // Map through address search results
-            addressSearchResults.map((property, index) => (
+            currentResults.map((property, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
                 <Card sx={{ maxWidth: 345 }}>
                   <CardMedia
@@ -440,23 +444,27 @@ export default function PropertySearch() {
       </Grid>
 
       {/* Pagination */}
-      {addressSearchResults.length === 0 &&
-        properties.length > propertiesPerPage && (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "20px",
-            }}
-          >
-            <Pagination
-              count={Math.ceil(properties.length / propertiesPerPage)}
-              page={currentPage}
-              onChange={handlePageChange}
-              color="primary"
-            />
-          </Box>
-        )}
+      {(addressSearchResults.length > propertiesPerPage ||
+        properties.length > propertiesPerPage) && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "20px",
+          }}
+        >
+          <Pagination
+            count={Math.ceil(
+              (addressSearchResults.length > 0
+                ? addressSearchResults.length
+                : properties.length) / propertiesPerPage
+            )}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+          />
+        </Box>
+      )}
     </Box>
   );
 }
