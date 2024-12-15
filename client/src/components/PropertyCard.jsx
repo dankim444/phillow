@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   Card,
+  CardMedia,
   CardContent,
   Typography,
   Modal,
@@ -20,15 +21,57 @@ const createpropertyIcon = () =>
     iconAnchor: [7, 7],
   });
 
+const getPropertyImage = (propertyType) => {
+  const type = propertyType?.toLowerCase();
+
+  const imageMap = {
+    "multi family": "/images/multi-family.jpg",
+    "single family": "/images/single-family.jpg",
+    "garage - residential": "/images/garage-residential.jpg",
+    "mixed use": "/images/mixed-use.jpg",
+    "apartments  > 4 units": "/images/large-apartment.jpg",
+    "vacant land - residential": "/images/vacant-residential.jpg",
+    commercial: "/images/commercial.jpg",
+    "special purpose": "/images/special-purpose.jpg",
+    industrial: "/images/industrial.jpg",
+    "garage - commercial": "/images/garage-commercial.jpg",
+    "vacant land": "/images/vacant-land.jpg",
+    offices: "/images/offices.jpg",
+    retail: "/images/retail.jpg",
+  };
+
+  return imageMap[type] || "/images/default-property.jpg";
+};
+
 export default function PropertyCard({ property }) {
   const [openModal, setOpenModal] = useState(false);
+  const [geocodeData, setGeocodeData] = useState(null);
 
   const handleOpenModal = () => {
     setOpenModal(true);
+    fetchGeocodeData(property.location);
   };
 
   const handleCloseModal = () => {
     setOpenModal(false);
+  };
+
+  // Fetch latitude and longitude data for the property
+  const fetchGeocodeData = async (address) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/property_location?address=${address}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setGeocodeData(data);
+        console.log("Geocode data:", data);
+      } else {
+        console.error("Error fetching geocode data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching geocode data:", error);
+    }
   };
 
   return (
@@ -37,6 +80,12 @@ export default function PropertyCard({ property }) {
         onClick={handleOpenModal}
         sx={{ cursor: "pointer", margin: "20px" }}
       >
+        <CardMedia
+          component="img"
+          height="140"
+          image={getPropertyImage(property.category_code_description)}
+          alt={property.category_code_description}
+        />
         <CardContent>
           <Typography variant="h6">{property.location}</Typography>
           <Typography>
@@ -82,19 +131,19 @@ export default function PropertyCard({ property }) {
                 {property.location}
               </Typography>
               <Typography variant="body1">
-                <strong>Zip Code:</strong> ${property.zip_code}
+                <strong>Zip Code:</strong> {property.zip_code}
               </Typography>
               <Typography variant="body1">
-                <strong>Market Value:</strong> ${property.market_value}
+                <strong>Market Value:</strong> ${Number(property.market_value)}
               </Typography>
               <Typography variant="body1">
-                <strong>Sale Price:</strong> ${property.sale_price}
+                <strong>Sale Price:</strong> ${Number(property.sale_price)}
               </Typography>
               <Typography variant="body1">
-                <strong>Sale Date:</strong> ${property.sale_date}
+                <strong>Sale Date:</strong> {property.sale_date}
               </Typography>
               <Typography variant="body1">
-                <strong>Type:</strong> ${property.category_code_description}
+                <strong>Type:</strong> {property.category_code_description}
               </Typography>
               <Typography variant="body1">
                 <strong>Bedrooms:</strong>{" "}
@@ -106,7 +155,7 @@ export default function PropertyCard({ property }) {
                 <strong>Bathrooms:</strong>{" "}
                 {property.number_of_bathrooms === 0
                   ? "N/A"
-                  : property.number_of_bathrooms}
+                  : Number(property.number_of_bathrooms)}
               </Typography>
               <Typography variant="body1">
                 <strong>Year Built:</strong> {property.year_built}
@@ -115,13 +164,11 @@ export default function PropertyCard({ property }) {
                 <strong>Total Livable Area:</strong>{" "}
                 {property.total_livable_area} sqft
               </Typography>
-              <Typography variant="body1">
-                <strong>Total Area:</strong> {property.total_area} sqft
-              </Typography>
               <Button
                 variant="contained"
                 color="primary"
                 onClick={handleCloseModal}
+                sx={{ marginTop: "20px" }}
               >
                 Close
               </Button>
@@ -129,24 +176,32 @@ export default function PropertyCard({ property }) {
 
             {/* Right side: Map */}
             <Grid item xs={12} md={6}>
-              <MapContainer
-                center={[property.latitude, property.longitude]} // Replace with actual lat/lng from `property`
-                zoom={15}
-                style={{ height: "400px", width: "100%", borderRadius: "8px" }}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                <Marker
-                  position={[property.latitude, property.longitude]}
-                  icon={createpropertyIcon()}
+              {geocodeData && (
+                <MapContainer
+                  center={[geocodeData.latitude, geocodeData.longitude]}
+                  zoom={15}
+                  style={{
+                    height: "400px",
+                    width: "100%",
+                    borderRadius: "8px",
+                  }}
                 >
-                  <Popup>
-                    <Typography variant="body2">{property.location}</Typography>
-                  </Popup>
-                </Marker>
-              </MapContainer>
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  <Marker
+                    position={[geocodeData.latitude, geocodeData.longitude]}
+                    icon={createpropertyIcon()}
+                  >
+                    <Popup>
+                      <Typography variant="body2">
+                        {geocodeData.display_name}
+                      </Typography>
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              )}
             </Grid>
           </Grid>
         </Box>

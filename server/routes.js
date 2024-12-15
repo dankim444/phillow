@@ -834,10 +834,15 @@ const getCrimesNearAddress = async (req, res) => {
               (err2, stationData) => {
                 if (err2) {
                   console.error("Database error:", err2.message);
-                  return res.status(500).json({ error: "Database query failed" });
+                  return res
+                    .status(500)
+                    .json({ error: "Database query failed" });
                 }
 
-                res.json({ crimes: crimeData.rows, stations: stationData.rows });
+                res.json({
+                  crimes: crimeData.rows,
+                  stations: stationData.rows,
+                });
               }
             );
           }
@@ -855,27 +860,25 @@ const getCrimesNearAddress = async (req, res) => {
 
 // [USED] [USED] [USED]
 // New route: GET /property_location
-const getPropertyLocation = async (req, res) => {
-  const { address } = req.query;
-
-  connection.query(
-    `
-    SELECT lat, lng
-    FROM properties
-    WHERE location = $1
-    `,
-    [address],
-    (err, data) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({});
-      } else if (data.rows.length === 0) {
-        res.status(404).json({ message: `No data found for address ${address}` });
-      } else {
-        res.json(data.rows[0]);
+const getPropertyLocation = (req, res) => {
+  const address = req.query.address;
+  const geocoderScript = path.resolve(__dirname, "../scripts", "geocoder.py");
+  exec(`python3 ${geocoderScript} "${address}"`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing script: ${stderr}`);
+      res.status(500).send({ error: stderr });
+    } else {
+      try {
+        const data = JSON.parse(stdout);
+        res.send(data);
+      } catch (parseError) {
+        console.error(`Error parsing JSON: ${parseError}`);
+        res
+          .status(500)
+          .send({ error: "Error parsing JSON response from script" });
       }
     }
-  );
+  });
 };
 
 module.exports = {

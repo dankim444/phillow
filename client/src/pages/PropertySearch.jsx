@@ -4,13 +4,11 @@ import {
   Button,
   Grid,
   Typography,
-  Card,
-  CardContent,
-  CardMedia,
   Box,
   Pagination,
   Slider,
 } from "@mui/material";
+import PropertyCard from "../components/PropertyCard";
 
 export default function PropertySearch() {
   const [zipcode, setZipcode] = useState("");
@@ -135,29 +133,6 @@ export default function PropertySearch() {
       console.error("Error fetching property by address:", error);
       setAddressSearchResults([]);
     }
-  };
-
-  // gets property image
-  const getPropertyImage = (propertyType) => {
-    const type = propertyType?.toLowerCase();
-
-    const imageMap = {
-      "multi family": "/images/multi-family.jpg",
-      "single family": "/images/single-family.jpg",
-      "garage - residential": "/images/garage-residential.jpg",
-      "mixed use": "/images/mixed-use.jpg",
-      "apartments  > 4 units": "/images/large-apartment.jpg",
-      "vacant land - residential": "/images/vacant-residential.jpg",
-      commercial: "/images/commercial.jpg",
-      "special purpose": "/images/special-purpose.jpg",
-      industrial: "/images/industrial.jpg",
-      "garage - commercial": "/images/garage-commercial.jpg",
-      "vacant land": "/images/vacant-land.jpg",
-      offices: "/images/offices.jpg",
-      retail: "/images/retail.jpg",
-    };
-
-    return imageMap[type] || "/images/default-property.jpg";
   };
 
   // Handle Pagination
@@ -388,36 +363,7 @@ export default function PropertySearch() {
       <Grid container spacing={3}>
         {currentAddresses.map((property, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
-            <Card sx={{ maxWidth: 345 }}>
-              <CardMedia
-                component="img"
-                height="180"
-                image={getPropertyImage(property.category_code_description)}
-                alt={`${property.category_code_description} property`}
-              />
-              <CardContent>
-                <Typography variant="h6">{property.location}</Typography>
-                <Typography>
-                  <strong>Zip Code:</strong> {property.zip_code}
-                </Typography>
-                <Typography>
-                  <strong>Market Value:</strong> $
-                  {Number(property.market_value)}
-                </Typography>
-                <Typography>
-                  <strong>Sale Price:</strong> ${Number(property.sale_price)}
-                </Typography>
-                <Typography>
-                  <strong>Type:</strong> {property.category_code_description}
-                </Typography>
-                <Typography>
-                  <strong>Area:</strong> {property.total_livable_area} sqft
-                </Typography>
-                <Typography>
-                  <strong>Year Built:</strong> {property.year_built}
-                </Typography>
-              </CardContent>
-            </Card>
+            <PropertyCard property={property} />
           </Grid>
         ))}
       </Grid>
