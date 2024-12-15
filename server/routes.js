@@ -385,23 +385,30 @@ const getSafeProperties = async (req, res) => {
 
   connection.query(
     `
+    WITH crime_counts AS (
+        SELECT 
+            zip_code,
+            COUNT(*) as total_crimes,
+            bool_or(text_general_code = $2) as has_specific_crime
+        FROM crime_data
+        GROUP BY zip_code
+    ),
+    filtered_crimes AS (
+        SELECT zip_code 
+        FROM crime_counts
+        WHERE NOT has_specific_crime
+    )
     SELECT 
         p.location,
         p.market_value,
         p.zip_code,
         zp.population,
-        (SELECT COUNT(*) FROM crime_data WHERE zip_code = p.zip_code) as total_crimes_in_zip
+        COALESCE(cc.total_crimes, 0) as total_crimes_in_zip
     FROM properties p
     JOIN zipcode_population zp ON p.zip_code = zp.zip_code
-    WHERE 
-        p.market_value > $1 
-        AND NOT EXISTS (
-            SELECT 1
-            FROM crime_data c
-            WHERE 
-                c.zip_code = p.zip_code 
-                AND c.text_general_code = $2
-        )
+    JOIN filtered_crimes fc ON p.zip_code = fc.zip_code
+    LEFT JOIN crime_counts cc ON p.zip_code = cc.zip_code
+    WHERE p.market_value > $1
     ORDER BY p.market_value
     LIMIT 100;
     `,
