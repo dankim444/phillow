@@ -7,7 +7,7 @@ import SafeHighValueProperties from "../components/SafeHighValueProperties";
 
 const useFetchData = (endpoint) => {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -32,11 +32,13 @@ const useFetchData = (endpoint) => {
 export default function Insights() {
   const [selectedInsight, setSelectedInsight] = useState(null); // Track the selected insight
   const [endpoint, setEndpoint] = useState(null); // Store the endpoint to fetch data from
+  const [buttonClicked, setButtonClicked] = useState(false); // Track if a button has been clicked
 
   const { data, loading, error } = useFetchData(endpoint);
 
   const handleButtonClick = (insight) => {
     setSelectedInsight(insight);
+    setButtonClicked(true);
 
     // Set endpoint based on the selected insight
     switch (insight) {
@@ -58,13 +60,20 @@ export default function Insights() {
   };
 
   const renderContent = () => {
+    if (!buttonClicked)
+      return (
+        <Typography>
+          Please click one of the buttons above to learn more about Philly properties and crime.
+        </Typography>
+      );
+
     if (loading) return <Typography>Loading...</Typography>;
     if (error)
       return <Typography>Error fetching data: {error.message}</Typography>;
     if (!data.length)
       return (
         <Typography>
-          Click on one of the buttons above to learn more.
+          No data available. Please try a different option.
         </Typography>
       );
 
