@@ -36,12 +36,52 @@ export default function PropertySearch() {
   const propertiesPerPage = 12; // Number of properties displayed per page
 
   const zipCodes = [
-    "19102", "19103", "19104", "19106", "19107", "19111", "19114", "19115",
-    "19116", "19118", "19119", "19120", "19121", "19122", "19123", "19124",
-    "19125", "19126", "19127", "19128", "19129", "19130", "19131", "19132",
-    "19133", "19134", "19135", "19136", "19137", "19138", "19139", "19140",
-    "19141", "19142", "19143", "19144", "19145", "19146", "19147", "19148",
-    "19149", "19150", "19151", "19152", "19153", "19154",
+    "19102",
+    "19103",
+    "19104",
+    "19106",
+    "19107",
+    "19111",
+    "19114",
+    "19115",
+    "19116",
+    "19118",
+    "19119",
+    "19120",
+    "19121",
+    "19122",
+    "19123",
+    "19124",
+    "19125",
+    "19126",
+    "19127",
+    "19128",
+    "19129",
+    "19130",
+    "19131",
+    "19132",
+    "19133",
+    "19134",
+    "19135",
+    "19136",
+    "19137",
+    "19138",
+    "19139",
+    "19140",
+    "19141",
+    "19142",
+    "19143",
+    "19144",
+    "19145",
+    "19146",
+    "19147",
+    "19148",
+    "19149",
+    "19150",
+    "19151",
+    "19152",
+    "19153",
+    "19154",
   ];
 
   const handleSearchByZip = async () => {
@@ -70,24 +110,28 @@ export default function PropertySearch() {
       setProperties(propertiesData);
 
       // Fetch crime stats by zip code
-      const crimeResponse = await fetch(
-        `http://localhost:8080/crime_per_capita/${zipcode}`
-      );
-      if (!crimeResponse.ok) {
-        throw new Error(`HTTP error! status: ${crimeResponse.status}`);
+      if (zipcode) {
+        const crimeResponse = await fetch(
+          `http://localhost:8080/crime_per_capita/${zipcode}`
+        );
+        if (!crimeResponse.ok) {
+          throw new Error(`HTTP error! status: ${crimeResponse.status}`);
+        }
+        const crimeData = await crimeResponse.json();
+        setCrimeStats(crimeData);
       }
-      const crimeData = await crimeResponse.json();
-      setCrimeStats(crimeData);
 
       // Fetch average house price by zip code
-      const avgPriceResponse = await fetch(
-        `http://localhost:8080/average_house_price/${zipcode}`
-      );
-      if (!avgPriceResponse.ok) {
-        throw new Error(`HTTP error! status: ${avgPriceResponse.status}`);
+      if (zipcode) {
+        const avgPriceResponse = await fetch(
+          `http://localhost:8080/average_house_price/${zipcode}`
+        );
+        if (!avgPriceResponse.ok) {
+          throw new Error(`HTTP error! status: ${avgPriceResponse.status}`);
+        }
+        const price = await avgPriceResponse.json();
+        setAvgHousePrice(price);
       }
-      const price = await avgPriceResponse.json();
-      setAvgHousePrice(price);
 
       setAddressSearchResults([]); // Clear specific property display
       setCurrentPage(1);
@@ -108,6 +152,14 @@ export default function PropertySearch() {
       );
       if (zipcode) {
         url.searchParams.append("zipcode", zipcode);
+      }
+
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            url.searchParams.append(key, value);
+          }
+        });
       }
 
       const response = await fetch(url);
@@ -181,21 +233,21 @@ export default function PropertySearch() {
           marginBottom: "20px",
         }}
       >
-       <Box sx={{ textAlign: "left" }}>
-      <Button
-        component={Link}
-        to="/"
-        variant="contained"
-        color="primary"
-        sx={{
-          marginBottom: "20px",
-          padding: "8px 16px",
-          fontSize: "1rem",
-        }}
-      >
-        Home
-      </Button>
-    </Box>
+        <Box sx={{ textAlign: "left" }}>
+          <Button
+            component={Link}
+            to="/"
+            variant="contained"
+            color="primary"
+            sx={{
+              marginBottom: "20px",
+              padding: "8px 16px",
+              fontSize: "1rem",
+            }}
+          >
+            Home
+          </Button>
+        </Box>
         <Typography variant="h4" gutterBottom>
           Find Your Dream Home
         </Typography>
@@ -332,7 +384,6 @@ export default function PropertySearch() {
         </Box>
       }
 
-
       {/* Display crime stats */}
       {crimeStats && (
         <Box
@@ -395,7 +446,9 @@ export default function PropertySearch() {
       {/* Pagination */}
       {(addressSearchResults.length > propertiesPerPage ||
         properties.length > propertiesPerPage) && (
-        <Box sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+        <Box
+          sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}
+        >
           <Pagination
             count={Math.ceil(
               (addressSearchResults.length > 0
@@ -411,4 +464,3 @@ export default function PropertySearch() {
     </Box>
   );
 }
-

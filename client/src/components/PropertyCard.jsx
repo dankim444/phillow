@@ -148,7 +148,7 @@ export default function PropertyCard({ property }) {
               </Typography>
               <Typography variant="body1">
                 <strong>Bathrooms:</strong>{" "}
-                {property.number_of_bathrooms === 0
+                {Number(property.number_of_bathrooms) === 0
                   ? "N/A"
                   : Number(property.number_of_bathrooms)}
               </Typography>
