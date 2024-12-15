@@ -96,9 +96,6 @@ export default function PropertyCard({ property }) {
             <strong>Market Value:</strong> ${Number(property.market_value)}
           </Typography>
           <Typography>
-            <strong>Sale Price:</strong> ${Number(property.sale_price)}
-          </Typography>
-          <Typography>
             <strong>Type:</strong> {property.category_code_description}
           </Typography>
           <Typography>
@@ -136,9 +133,6 @@ export default function PropertyCard({ property }) {
               </Typography>
               <Typography variant="body1">
                 <strong>Market Value:</strong> ${Number(property.market_value)}
-              </Typography>
-              <Typography variant="body1">
-                <strong>Sale Price:</strong> ${Number(property.sale_price)}
               </Typography>
               <Typography variant="body1">
                 <strong>Sale Date:</strong> {property.sale_date}
