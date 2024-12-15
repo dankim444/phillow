@@ -10,9 +10,13 @@ export default function HomePage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#f5f5f5", // Soft gray background
+        backgroundImage: "url('/images/background1.png')", // Replace with the actual image path
+        backgroundSize: "cover", // Ensures the image covers the entire background
+        backgroundPosition: "center", // Centers the image
+        backgroundRepeat: "no-repeat", // Prevents the image from repeating
         padding: "20px",
       }}
+    
     >
       <Grid
         container
@@ -82,7 +86,7 @@ export default function HomePage() {
               color: "#fff",
             }}
           >
-            Compare Neighborhoods
+            Compare Neighborhoods and Addresses
           </Button>
           <Button
             variant="contained"
