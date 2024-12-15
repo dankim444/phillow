@@ -13,6 +13,10 @@ import {
   TableCell,
   TableContainer,
   Paper,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { Link } from "react-router-dom"; // Import Link
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -57,6 +61,55 @@ export default function CrimeMap() {
   const [dataByAddress, setDataByAddress] = useState([]); // Crime and station data for each address
   const [error, setError] = useState("");
 
+  const zipCodes = [
+    "19102",
+    "19103",
+    "19104",
+    "19106",
+    "19107",
+    "19111",
+    "19114",
+    "19115",
+    "19116",
+    "19118",
+    "19119",
+    "19120",
+    "19121",
+    "19122",
+    "19123",
+    "19124",
+    "19125",
+    "19126",
+    "19127",
+    "19128",
+    "19129",
+    "19130",
+    "19131",
+    "19132",
+    "19133",
+    "19134",
+    "19135",
+    "19136",
+    "19137",
+    "19138",
+    "19139",
+    "19140",
+    "19141",
+    "19142",
+    "19143",
+    "19144",
+    "19145",
+    "19146",
+    "19147",
+    "19148",
+    "19149",
+    "19150",
+    "19151",
+    "19152",
+    "19153",
+    "19154",
+  ];
+
   // Switch between tabs
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
@@ -68,7 +121,7 @@ export default function CrimeMap() {
   // Fetch crimes and police stations by zip code
   const fetchCrimeDataByZip = async () => {
     if (!zipcode) {
-      setError("Please enter a zip code.");
+      setError("Please select a zip code.");
       return;
     }
 
@@ -86,7 +139,9 @@ export default function CrimeMap() {
       const crimeResults = await response.json();
       setCrimeData(crimeResults || []);
 
-      const stationResponse = await fetch(`http://localhost:8080/police_stations/${zipcode}`);
+      const stationResponse = await fetch(
+        `http://localhost:8080/police_stations/${zipcode}`
+      );
       if (!stationResponse.ok) {
         throw new Error(`HTTP error! status: ${stationResponse.status}`);
       }
@@ -95,7 +150,6 @@ export default function CrimeMap() {
     } catch (err) {
       console.error("Error fetching data:", err);
       setError("Failed to fetch data. Please try again.");
-    } finally {
     }
   };
 
@@ -129,8 +183,9 @@ export default function CrimeMap() {
       ]);
     } catch (err) {
       console.error("Error fetching data:", err);
-      setError(`Failed to fetch data for address: ${address}. Please try again.`);
-    } finally {
+      setError(
+        `Failed to fetch data for address: ${address}. Please try again.`
+      );
     }
   };
 
@@ -153,7 +208,6 @@ export default function CrimeMap() {
   };
 
   return (
-    
     <Box sx={{ padding: "20px" }}>
       {/* Home Button */}
       <Button
@@ -187,15 +241,28 @@ export default function CrimeMap() {
       {tabIndex === 0 && (
         <Box>
           {/* Zip Code Search */}
-          <Box sx={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
-            <TextField
-              label="Enter Zip Code"
-              variant="outlined"
-              value={zipcode}
-              onChange={(e) => setZipcode(e.target.value)}
-              sx={{ marginRight: "10px", width: "300px" }}
-            />
-            <Button variant="contained" size="large" onClick={fetchCrimeDataByZip}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", marginBottom: "20px" }}
+          >
+            <FormControl sx={{ width: "300px", marginRight: "10px" }}>
+              <InputLabel>Select Zip Code</InputLabel>
+              <Select
+                value={zipcode}
+                onChange={(e) => setZipcode(e.target.value)}
+                label="Select Zip Code"
+              >
+                {zipCodes.map((zip) => (
+                  <MenuItem key={zip} value={zip}>
+                    {zip}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={fetchCrimeDataByZip}
+            >
               Search by Zip Code
             </Button>
           </Box>
@@ -205,9 +272,11 @@ export default function CrimeMap() {
       {tabIndex === 1 && (
         <Box>
           {/* Address Search */}
-          <Box sx={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", marginBottom: "20px" }}
+          >
             <TextField
-              label="Enter Address"
+              label="Enter Address (ie. 123 Main St)"
               variant="outlined"
               value={newAddress}
               onChange={(e) => setNewAddress(e.target.value)}
@@ -266,17 +335,26 @@ export default function CrimeMap() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><strong>Address</strong></TableCell>
-                <TableCell><strong>Total Crimes</strong></TableCell>
-                <TableCell><strong>Top 3 Crime Types</strong></TableCell>
-                <TableCell><strong>Police Stations Nearby</strong></TableCell>
+                <TableCell>
+                  <strong>Address</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Total Crimes</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Top 3 Crime Types</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Police Stations Nearby</strong>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {dataByAddress.map((entry, index) => {
                 // Calculate top 3 crime types
                 const crimeCounts = entry.crimes.reduce((acc, crime) => {
-                  acc[crime.text_general_code] = (acc[crime.text_general_code] || 0) + 1;
+                  acc[crime.text_general_code] =
+                    (acc[crime.text_general_code] || 0) + 1;
                   return acc;
                 }, {});
 
@@ -304,12 +382,16 @@ export default function CrimeMap() {
         </TableContainer>
       )}
 
-
       {/* Map Display */}
       <MapContainer
         center={[39.9526, -75.1652]} // Default to Philadelphia coordinates
         zoom={13}
-        style={{ height: "500px", width: "100%", borderRadius: "8px", marginTop: "20px" }}
+        style={{
+          height: "500px",
+          width: "100%",
+          borderRadius: "8px",
+          marginTop: "20px",
+        }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -343,7 +425,9 @@ export default function CrimeMap() {
               icon={createStarIcon()}
             >
               <Popup>
-                <Typography variant="body2"><strong>Police Station</strong></Typography>
+                <Typography variant="body2">
+                  <strong>Police Station</strong>
+                </Typography>
                 <Typography variant="body2">
                   <strong>Address:</strong> {station.location}
                 </Typography>
@@ -366,8 +450,8 @@ export default function CrimeMap() {
                       <strong>Type:</strong> {crime.text_general_code}
                     </Typography>
                     <Typography variant="body2">
-                    <strong>Count:</strong> {crime.crime_count}
-                    </Typography> 
+                      <strong>Count:</strong> {crime.crime_count}
+                    </Typography>
                   </Popup>
                 </Marker>
               ))}
@@ -378,7 +462,9 @@ export default function CrimeMap() {
                   icon={createStarIcon()}
                 >
                   <Popup>
-                    <Typography variant="body2"><strong>Police Station</strong></Typography>
+                    <Typography variant="body2">
+                      <strong>Police Station</strong>
+                    </Typography>
                     <Typography variant="body2">
                       <strong>Address:</strong> {station.location}
                     </Typography>
