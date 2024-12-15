@@ -40,24 +40,6 @@ const StreetInfo = ({ data }) => (
       pageSize={10}
       autoHeight
     />
-    <Typography variant="h6" sx={{ marginTop: "20px" }}>
-      Crime Type Distribution (Sample)
-    </Typography>
-    <BarChart
-      width={600}
-      height={300}
-      data={data.map((row) => ({
-        name: row.street_name,
-        ...row.crime_type_distribution, // Assumes crime_type_distribution is a flat JSON
-      }))}
-      margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-    >
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="name" />
-      <YAxis />
-      <Tooltip />
-      <Bar dataKey="total_crimes_2018" fill="#0074e4" />
-    </BarChart>
   </>
 );
 
