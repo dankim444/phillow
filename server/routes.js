@@ -98,23 +98,31 @@ const getProperties = async (req, res) => {
 // Route 2: GET /property_location
 const getPropertyLocation = (req, res) => {
   const address = req.query.address;
-  const geocoderScript = path.resolve(__dirname, "./scripts", "geocoder.py");
-  exec(`python3 ${geocoderScript} "${address}"`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error executing script: ${stderr}`);
-      res.status(500).send({ error: stderr });
-    } else {
+  const geocoderScript = path.resolve(__dirname, "scripts/geocoder.py");
+
+  // Use the Python binary from the virtual environment
+  const pythonPath = path.resolve(__dirname, "venv/bin/python");
+
+  exec(
+    `${pythonPath} ${geocoderScript} "${address}"`,
+    (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error executing geocoder.py:`, error);
+        console.error(`Standard Error Output:`, stderr);
+        return res
+          .status(500)
+          .send({ error: "Geocoding script execution failed" });
+      }
+
       try {
         const data = JSON.parse(stdout);
         res.send(data);
       } catch (parseError) {
-        console.error(`Error parsing JSON: ${parseError}`);
-        res
-          .status(500)
-          .send({ error: "Error parsing JSON response from script" });
+        console.error(`JSON parsing error:`, parseError);
+        return res.status(500).send({ error: "Error parsing JSON response" });
       }
     }
-  });
+  );
 };
 
 // [USED] [USED] [USED]
@@ -443,35 +451,38 @@ const getCrimesNearAddress = async (req, res) => {
   }
 
   // Adjust the path to `geocoder.py` based on its actual location
-  const geocoderScript = path.resolve(__dirname, "./scripts", "geocoder.py");
+  const geocoderScript = path.resolve(__dirname, "./scripts/geocoder.py");
+  const pythonPath = path.resolve(__dirname, "./venv/bin/python");
 
   try {
-    exec(`python3 ${geocoderScript} "${address}"`, (error, stdout, stderr) => {
-      if (error) {
-        console.error("Geocoder error:", error.message);
-        console.error("Error stack:", error.stack);
-        return res.status(500).json({ error: "Geocoding failed" });
-      }
-
-      if (stderr) {
-        console.error("Geocoder stderr:", stderr);
-        return res.status(500).json({ error: "Geocoding error" });
-      }
-
-      console.log("Geocoder output:", stdout);
-
-      try {
-        const geocodeResult = JSON.parse(stdout);
-
-        if (geocodeResult.error) {
-          return res.status(404).json({ error: "Address not found" });
+    exec(
+      `${pythonPath} ${geocoderScript} "${address}"`,
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error("Geocoder error:", error.message);
+          console.error("Error stack:", error.stack);
+          return res.status(500).json({ error: "Geocoding failed" });
         }
 
-        const { latitude, longitude } = geocodeResult;
+        if (stderr) {
+          console.error("Geocoder stderr:", stderr);
+          return res.status(500).json({ error: "Geocoding error" });
+        }
 
-        // Query the database for crimes and police stations
-        connection.query(
-          `
+        console.log("Geocoder output:", stdout);
+
+        try {
+          const geocodeResult = JSON.parse(stdout);
+
+          if (geocodeResult.error) {
+            return res.status(404).json({ error: "Address not found" });
+          }
+
+          const { latitude, longitude } = geocodeResult;
+
+          // Query the database for crimes and police stations
+          connection.query(
+            `
           WITH crime_distances AS (
               SELECT
                   text_general_code AS crime_type,
@@ -505,15 +516,15 @@ const getCrimesNearAddress = async (req, res) => {
           ORDER BY
               distance_km ASC;
           `,
-          [latitude, longitude, radius],
-          (err, crimeData) => {
-            if (err) {
-              console.error("Database error:", err.message);
-              return res.status(500).json({ error: "Database query failed" });
-            }
+            [latitude, longitude, radius],
+            (err, crimeData) => {
+              if (err) {
+                console.error("Database error:", err.message);
+                return res.status(500).json({ error: "Database query failed" });
+              }
 
-            connection.query(
-              `
+              connection.query(
+                `
               WITH station_distances AS (
                 SELECT
                   object_id,
@@ -532,28 +543,29 @@ const getCrimesNearAddress = async (req, res) => {
               )
               SELECT * FROM station_distances WHERE distance_km <= $3 ORDER BY distance_km ASC;
               `,
-              [latitude, longitude, radius],
-              (err2, stationData) => {
-                if (err2) {
-                  console.error("Database error:", err2.message);
-                  return res
-                    .status(500)
-                    .json({ error: "Database query failed" });
-                }
+                [latitude, longitude, radius],
+                (err2, stationData) => {
+                  if (err2) {
+                    console.error("Database error:", err2.message);
+                    return res
+                      .status(500)
+                      .json({ error: "Database query failed" });
+                  }
 
-                res.json({
-                  crimes: crimeData.rows,
-                  stations: stationData.rows,
-                });
-              }
-            );
-          }
-        );
-      } catch (parseError) {
-        console.error("Parse error:", parseError.message);
-        return res.status(500).json({ error: "Invalid geocoding output" });
+                  res.json({
+                    crimes: crimeData.rows,
+                    stations: stationData.rows,
+                  });
+                }
+              );
+            }
+          );
+        } catch (parseError) {
+          console.error("Parse error:", parseError.message);
+          return res.status(500).json({ error: "Invalid geocoding output" });
+        }
       }
-    });
+    );
   } catch (err) {
     console.error("Unexpected error:", err.message);
     return res.status(500).json({ error: "An unexpected error occurred" });
