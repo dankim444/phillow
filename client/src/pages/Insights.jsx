@@ -52,7 +52,7 @@ export default function Insights() {
         setEndpoint("http://localhost:8080/zipcode_info");
         break;
       case "propertyInfo":
-        setEndpoint("http://localhost:8080/safe_high_value_properties");
+        setEndpoint(null); // Do not set endpoint for propertyInfo
         break;
       default:
         setEndpoint(null);
@@ -63,9 +63,14 @@ export default function Insights() {
     if (!buttonClicked)
       return (
         <Typography>
-          Please click one of the buttons above to learn more about Philly properties and crime.
+          Please click one of the buttons above to learn more about Philly
+          properties and crime.
         </Typography>
       );
+
+    if (selectedInsight === "propertyInfo") {
+      return <SafeHighValueProperties />;
+    }
 
     if (loading) return <Typography>Loading...</Typography>;
     if (error)
@@ -84,8 +89,6 @@ export default function Insights() {
         return <StreetPatterns data={data} />;
       case "streetInfo":
         return <StreetInfo data={data} />;
-      case "propertyInfo":
-        return <SafeHighValueProperties data={data} />;
       default:
         return <Typography>Select an insight to view details.</Typography>;
     }

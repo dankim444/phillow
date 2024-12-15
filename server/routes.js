@@ -376,47 +376,44 @@ they want to avoid. It returns a list of properties where all properties have a 
 specified threshold and there are no reported crimes of the specified type.
 */
 
-// duration:
-const getSafeHighValueProperties = async (req, res) => {
+// duration: 
+const getSafeProperties = async (req, res) => {
   const { min_market_value, crime_type } = req.query;
+
+  if (!min_market_value || !crime_type) {
+    return res
+      .status(400)
+      .json({ error: "Missing required query parameters." });
+  }
 
   connection.query(
     `
-    WITH high_value_zips AS (
-        SELECT 
-            zip_code
-        FROM properties
-        GROUP BY zip_code
-        HAVING MIN(market_value) > $1
-    ),
-    safe_zips AS (
-        SELECT
-            zip_code
-        FROM crime_data
-        WHERE text_general_code = $2
-        GROUP BY zip_code
-        HAVING COUNT(object_id) = 0
-    )
     SELECT 
         p.location,
-        p.zip_code,
         p.market_value,
-        p.total_livable_area,
-        p.year_built
-    FROM properties AS p
-    JOIN high_value_zips AS hvz ON p.zip_code = hvz.zip_code
-    JOIN safe_zips AS sz ON p.zip_code = sz.zip_code
-    WHERE p.market_value > $1
-    ORDER BY p.zip_code;
+        p.zip_code,
+        zp.population,
+        (SELECT COUNT(*) FROM crime_data WHERE zip_code = p.zip_code) as total_crimes_in_zip
+    FROM properties p
+    JOIN zipcode_population zp ON p.zip_code = zp.zip_code
+    WHERE 
+        p.market_value > $1 
+        AND NOT EXISTS (
+            SELECT 1
+            FROM crime_data c
+            WHERE 
+                c.zip_code = p.zip_code 
+                AND c.text_general_code = $2
+        )
+    ORDER BY p.market_value DESC;
     `,
     [min_market_value, crime_type],
     (err, data) => {
       if (err) {
-        console.error(err);
-        res.status(500).json([]);
-      } else {
-        res.json(data.rows);
+        console.error("Error executing query:", err);
+        return res.status(500).json({ error: "Database query failed." });
       }
+      res.json(data.rows);
     }
   );
 };
@@ -886,7 +883,7 @@ module.exports = {
   getAverageHousePriceByZip,
   getZipCodeInfo,
   getStreetPatterns,
-  getSafeHighValueProperties,
+  getSafeProperties,
   getInvestmentScores,
   getStreetSafetyScores,
   getStreetInfo,
