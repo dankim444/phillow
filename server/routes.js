@@ -369,53 +369,47 @@ const getStreetPatterns = async (req, res) => {
   );
 };
 
-// Route 10: GET /lowest_crime_zips
+// Route 10: GET /safe_high_value_properties
 /*
-Description: Complex query that allows a user to provide up to 3 crimes they are most worried about and then provides a sorted list of zipcodes with the
-lowest per capita crime of those types along with the average price of a property in the zipcode.
+Description: This route allows a user to provide a minimum market value and a specific crime type
+they want to avoid. It returns a list of properties where all properties have a market value above the
+specified threshold and there are no reported crimes of the specified type.
 */
 
-// duration: 343 ms
-const getLowestCrimeZips = async (req, res) => {
-  const { crime_type1, crime_type2, crime_type3 } = req.query;
+// duration:
+const getSafeHighValueProperties = async (req, res) => {
+  const { min_market_value, crime_type } = req.query;
 
   connection.query(
     `
-    WITH filtered_crimes AS (
+    WITH high_value_zips AS (
         SELECT 
-            c.zip_code, 
-            COUNT(c.object_id) AS specific_crime_count
-        FROM crime_data AS c
-        WHERE c.text_general_code IN ($1, $2, $3)
-        GROUP BY c.zip_code
-    ),
-    crime_per_capita AS (
-        SELECT 
-            fc.zip_code, 
-            fc.specific_crime_count, 
-            zp.population, 
-            (fc.specific_crime_count * 1.0) / zp.population AS specific_crime_per_capita
-        FROM filtered_crimes AS fc
-        JOIN zipcode_population AS zp ON fc.zip_code = zp.zip_code
-        WHERE zp.population > 0  
-    ),
-    avg_property_price AS (
-        SELECT 
-            zip_code, 
-            AVG(market_value) AS avg_price 
+            zip_code
         FROM properties
         GROUP BY zip_code
+        HAVING MIN(market_value) > $1
+    ),
+    safe_zips AS (
+        SELECT
+            zip_code
+        FROM crime_data
+        WHERE text_general_code = $2
+        GROUP BY zip_code
+        HAVING COUNT(object_id) = 0
     )
     SELECT 
-        cpc.zip_code, 
-        cpc.specific_crime_per_capita, 
-        app.avg_price 
-    FROM crime_per_capita AS cpc
-    JOIN avg_property_price AS app ON cpc.zip_code = app.zip_code
-    ORDER BY cpc.specific_crime_per_capita ASC
-    LIMIT 10;
+        p.location,
+        p.zip_code,
+        p.market_value,
+        p.total_livable_area,
+        p.year_built
+    FROM properties AS p
+    JOIN high_value_zips AS hvz ON p.zip_code = hvz.zip_code
+    JOIN safe_zips AS sz ON p.zip_code = sz.zip_code
+    WHERE p.market_value > $1
+    ORDER BY p.zip_code;
     `,
-    [crime_type1, crime_type2, crime_type3],
+    [min_market_value, crime_type],
     (err, data) => {
       if (err) {
         console.error(err);
@@ -892,7 +886,7 @@ module.exports = {
   getAverageHousePriceByZip,
   getZipCodeInfo,
   getStreetPatterns,
-  getLowestCrimeZips,
+  getSafeHighValueProperties,
   getInvestmentScores,
   getStreetSafetyScores,
   getStreetInfo,
