@@ -617,109 +617,12 @@ average market value, etc
 */
 
 //26 seconds PRE-Optimization
+// 0.5 seconds POST-Optimization (caching)
 const getStreetInfo = async (req, res) => {
   connection.query(
     `
-    WITH crime_street AS (
-        SELECT
-          SUBSTRING(cd.location_block FROM '^[0-9]+ BLOCK (.+)$') AS street_name,
-          cd.zip_code,
-          cd.text_general_code AS crime_type,
-          COUNT(*) AS crime_count
-        FROM crime_data cd
-        WHERE cd.dispatch_date >= DATE '2018-01-01'
-          AND cd.dispatch_date <  DATE '2019-01-01'
-        GROUP BY 1, cd.zip_code, cd.text_general_code
-    ),
-    crime_street_agg AS (
-        SELECT
-          cs.street_name,
-          cs.zip_code,
-          SUM(cs.crime_count) AS total_crimes_2018,
-          JSONB_OBJECT_AGG(cs.crime_type, cs.crime_count) AS crimes_by_type
-        FROM crime_street cs
-        GROUP BY cs.street_name, cs.zip_code
-    ),
-    property_street AS (
-        SELECT
-          SUBSTRING(p.location FROM '^[0-9]+ (.+)$') AS street_name,
-          p.zip_code,
-          COUNT(*) AS property_count,
-          AVG(p.market_value) AS avg_market_value,
-          AVG(p.sale_price)   AS avg_sale_price,
-          COUNT(DISTINCT p.category_code_description) AS property_type_diversity
-        FROM properties p
-        GROUP BY 1, p.zip_code
-    ),
-    joined_data AS (
-        SELECT
-          ps.street_name,
-          ps.zip_code,
-          ps.property_count,
-          ps.avg_market_value,
-          ps.avg_sale_price,
-          ps.property_type_diversity,
-          COALESCE(csa.total_crimes_2018, 0) AS total_crimes_2018,
-          csa.crimes_by_type
-        FROM property_street ps
-        LEFT JOIN crime_street_agg csa
-              ON ps.street_name = csa.street_name
-              AND ps.zip_code = csa.zip_code
-    ),
-    zip_info AS (
-        SELECT
-          zp.zip_code,
-          zp.population,
-          COUNT(DISTINCT pol.object_id) AS police_station_count
-        FROM zipcode_population zp
-        LEFT JOIN police_stations pol
-              ON zp.zip_code = pol.zip_code
-        GROUP BY zp.zip_code, zp.population
-    ),
-    final_rank AS (
-        SELECT
-          jd.street_name,
-          jd.zip_code,
-          jd.property_count,
-          jd.avg_market_value,
-          jd.avg_sale_price,
-          jd.property_type_diversity,
-          jd.total_crimes_2018,
-          jd.crimes_by_type,
-          zi.population,
-          zi.police_station_count,
-          -- Replaced efficient window functions with correlated subqueries
-          (SELECT COUNT(*) + 1
-          FROM joined_data jd2
-          WHERE jd2.avg_market_value > jd.avg_market_value) AS market_value_rank,
-          (SELECT COUNT(*) + 1
-          FROM joined_data jd2
-          WHERE jd2.total_crimes_2018 < jd.total_crimes_2018) AS crime_rank
-        FROM joined_data jd
-        JOIN zip_info zi ON jd.zip_code = zi.zip_code
-    )
-    SELECT
-        fr.street_name,
-        fr.zip_code,
-        fr.property_count,
-        ROUND(fr.avg_market_value,2) AS avg_market_value,
-        ROUND(fr.avg_sale_price,2)   AS avg_sale_price,
-        fr.property_type_diversity,
-        fr.total_crimes_2018,
-        fr.crimes_by_type AS crime_type_distribution,
-        fr.population,
-        fr.police_station_count,
-        fr.market_value_rank,
-        fr.crime_rank,
-        ROUND(
-          (0.4 * fr.market_value_rank)
-          + (0.4 * fr.crime_rank)
-          - (0.2 * fr.police_station_count),
-        2) AS home_finder_score
-    FROM final_rank fr
-    WHERE fr.property_count >= 3
-    ORDER BY total_crimes_2018 DESC;
-    `,
+    SELECT * FROM street_info_mv;
+`,
     (err, data) => {
       if (err) {
         console.error(err);
