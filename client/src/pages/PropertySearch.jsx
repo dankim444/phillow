@@ -83,7 +83,21 @@ export default function PropertySearch() {
     "19154",
   ];
 
+  const validateInputs = () => {
+    if (!zipcode && !address) {
+      alert("Please enter a zip code or address.");
+      return false;
+    }
+    if (zipcode && !zipCodes.includes(zipcode)) {
+      alert("Please enter a valid zip code.");
+      return false;
+    }
+    return true;
+  };
+
   const handleSearch = async () => {
+    if (!validateInputs()) return;
+
     try {
       const propertiesURL = new URL("http://localhost:8080/properties");
 
