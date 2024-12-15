@@ -43,28 +43,6 @@ export default function PropertySearch() {
     "19149", "19150", "19151", "19152", "19153", "19154",
   ];
 
-  // Handle Pagination
-  const startIndex = (currentPage - 1) * propertiesPerPage;
-  const endIndex = startIndex + propertiesPerPage;
-  const currentProperties = properties.slice(startIndex, endIndex);
-  const currentResults =
-    addressSearchResults.length > 0
-      ? addressSearchResults.slice(startIndex, endIndex)
-      : currentProperties;
-
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
-  };
-
-  // Handle Filter Changes
-  const handleFilterChange = (filterName, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterName]: value,
-    }));
-  };
-
-
   const handleSearchByZip = async () => {
     try {
       const propertiesURL = new URL("http://localhost:8080/properties_in_zip");
