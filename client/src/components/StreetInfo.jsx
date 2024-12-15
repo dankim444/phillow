@@ -1,7 +1,5 @@
 import React from "react";
-import { Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 const StreetInfo = ({ data }) => (
   <>
