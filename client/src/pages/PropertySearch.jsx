@@ -13,6 +13,7 @@ import {
   FormControl,
 } from "@mui/material";
 import PropertyCard from "../components/PropertyCard";
+import { Link } from "react-router-dom"; // Import Link
 
 export default function PropertySearch() {
   const [zipcode, setZipcode] = useState(""); // Selected zip code
@@ -180,6 +181,21 @@ export default function PropertySearch() {
           marginBottom: "20px",
         }}
       >
+       <Box sx={{ textAlign: "left" }}>
+      <Button
+        component={Link}
+        to="/"
+        variant="contained"
+        color="primary"
+        sx={{
+          marginBottom: "20px",
+          padding: "8px 16px",
+          fontSize: "1rem",
+        }}
+      >
+        Home
+      </Button>
+    </Box>
         <Typography variant="h4" gutterBottom>
           Find Your Dream Home
         </Typography>

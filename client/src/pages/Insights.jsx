@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Typography, Grid, Button, Box } from "@mui/material";
+import { Link } from "react-router-dom"; // Import Link
 import ZipcodeInfo from "../components/ZipcodeInfo";
 import StreetPatterns from "../components/StreetPatterns";
 import StreetInfo from "../components/StreetInfo";
@@ -96,6 +97,20 @@ export default function Insights() {
 
   return (
     <Box sx={{ padding: "20px" }}>
+      {/* Home Button */}
+      <Button
+        component={Link}
+        to="/"
+        variant="contained"
+        color="primary"
+        sx={{
+          marginBottom: "20px",
+          padding: "8px 16px",
+          fontSize: "1rem",
+        }}
+      >
+        Home
+      </Button>
       <Typography variant="h4" gutterBottom>
         Insights Page
       </Typography>
