@@ -1,172 +1,94 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Typography, Grid, Button, Box } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import ZipcodeInfo from "../components/ZipcodeInfo";
+import StreetPatterns from "../components/StreetPatterns";
+import StreetInfo from "../components/StreetInfo";
+import SafeHighValueProperties from "../components/SafeHighValueProperties";
+
+const useFetchData = (endpoint) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!endpoint) return;
+
+    setLoading(true);
+    fetch(endpoint)
+      .then((response) => response.json())
+      .then((data) => {
+        setData(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setError(error);
+        setLoading(false);
+      });
+  }, [endpoint]);
+
+  return { data, loading, error };
+};
 
 export default function Insights() {
   const [selectedInsight, setSelectedInsight] = useState(null); // Track the selected insight
-  const [data, setData] = useState([]); // Store the fetched data
+  const [endpoint, setEndpoint] = useState(null); // Store the endpoint to fetch data from
+  const [buttonClicked, setButtonClicked] = useState(false); // Track if a button has been clicked
 
-  const fetchData = (endpoint) => {
-    fetch(endpoint)
-      .then((response) => response.json())
-      .then((data) => setData(data))
-      .catch((error) => console.error("Error fetching data:", error));
-  };
+  const { data, loading, error } = useFetchData(endpoint);
 
   const handleButtonClick = (insight) => {
     setSelectedInsight(insight);
+    setButtonClicked(true);
 
-    // Fetch data based on the selected insight
+    // Set endpoint based on the selected insight
     switch (insight) {
       case "streetPatterns":
-        fetchData("http://localhost:8080/street_patterns");
+        setEndpoint("http://localhost:8080/street_patterns");
         break;
       case "streetInfo":
-        fetchData("http://localhost:8080/street_info");
+        setEndpoint("http://localhost:8080/street_info");
         break;
       case "zipcodeInfo":
-        fetchData("http://localhost:8080/zipcode_info");
+        setEndpoint("http://localhost:8080/zipcode_info");
+        break;
+      case "propertyInfo":
+        setEndpoint(null); // Do not set endpoint for propertyInfo
         break;
       default:
-        setData([]);
+        setEndpoint(null);
     }
   };
 
   const renderContent = () => {
-    if (!data.length) return <Typography>No data available.</Typography>;
+    if (!buttonClicked)
+      return (
+        <Typography>
+          Please click one of the buttons above to learn more about Philly
+          properties and crime.
+        </Typography>
+      );
+
+    if (selectedInsight === "propertyInfo") {
+      return <SafeHighValueProperties />;
+    }
+
+    if (loading) return <Typography>Loading...</Typography>;
+    if (error)
+      return <Typography>Error fetching data: {error.message}</Typography>;
+    if (!data.length)
+      return (
+        <Typography>
+          No data available. Please try a different option.
+        </Typography>
+      );
 
     switch (selectedInsight) {
       case "zipcodeInfo":
-        return (
-          <>
-            <DataGrid
-              rows={data.map((row, index) => ({
-                id: index,
-                ...row,
-              }))}
-              columns={[
-                { field: "zip_code", headerName: "Zip Code", width: 130 },
-                {
-                  field: "avg_market_value",
-                  headerName: "Avg Market Value",
-                  width: 200,
-                },
-                {
-                  field: "property_count",
-                  headerName: "Property Count",
-                  width: 150,
-                },
-                { field: "population", headerName: "Population", width: 150 },
-                {
-                  field: "total_crimes",
-                  headerName: "Total Crimes",
-                  width: 130,
-                },
-                {
-                  field: "police_stations",
-                  headerName: "Police Stations",
-                  width: 150,
-                },
-                {
-                  field: "crime_rate_per_capita",
-                  headerName: "Crime Rate Per Capita",
-                  width: 200,
-                },
-              ]}
-              pageSize={10}
-              autoHeight
-            />
-            <Typography variant="h6" sx={{ marginTop: "20px" }}>
-              Zip Code Avg Market Value Distribution
-            </Typography>
-            <BarChart
-              width={1400}
-              height={300}
-              data={data.map((row) => ({
-                name: row.zip_code,
-                avgMarketValue: row.avg_market_value,
-              }))}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" 
-                      interval={0} // Show every zipcode
-                      angle={-45} // Rotate tick labels for better readability
-                      textAnchor="end" // Align text with ticks
-              />
-              <YAxis domain={[0, 1000000]}/>
-              <Tooltip />
-              <Bar dataKey="avgMarketValue" fill="#82ca9d" />
-            </BarChart>
-          </>
-        );
-
+        return <ZipcodeInfo data={data} />;
       case "streetPatterns":
-        return (
-          <DataGrid
-            rows={data.map((row, index) => ({ id: index, ...row }))}
-            columns={[
-              { field: "street_name", headerName: "Street Name", width: 200 },
-              { field: "num_crimes", headerName: "Crimes", width: 130 },
-              { field: "crime_types", headerName: "Crime Types", width: 130 },
-              {
-                field: "crimes_per_month",
-                headerName: "Crimes/Month",
-                width: 150,
-              },
-              {
-                field: "crimes_per_property",
-                headerName: "Crimes/Property",
-                width: 170,
-              },
-            ]}
-            pageSize={10}
-            autoHeight
-          />
-        );
-
+        return <StreetPatterns data={data} />;
       case "streetInfo":
-        return (
-          <>
-            <DataGrid
-              rows={data.map((row, index) => ({ id: index, ...row }))}
-              columns={[
-                { field: "street_name", headerName: "Street Name", width: 200 },
-                { field: "zip_code", headerName: "Zip Code", width: 100 },
-                {
-                  field: "property_count",
-                  headerName: "Property Count",
-                  width: 150,
-                },
-                {
-                  field: "avg_market_value",
-                  headerName: "Avg Market Value",
-                  width: 180,
-                },
-                {
-                  field: "avg_sale_price",
-                  headerName: "Avg Sale Price",
-                  width: 180,
-                },
-                { field: "population", headerName: "Population", width: 130 },
-                {
-                  field: "police_station_count",
-                  headerName: "Police Stations",
-                  width: 160,
-                },
-                {
-                  field: "home_finder_score",
-                  headerName: "Home Finder Score",
-                  width: 180,
-                },
-              ]}
-              pageSize={10}
-              autoHeight
-            />
-          </>
-        );
-
+        return <StreetInfo data={data} />;
       default:
         return <Typography>Select an insight to view details.</Typography>;
     }
@@ -203,6 +125,15 @@ export default function Insights() {
             onClick={() => handleButtonClick("streetInfo")}
           >
             Property Info By Street
+          </Button>
+        </Grid>
+        <Grid item>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleButtonClick("propertyInfo")}
+          >
+            Safe High Value Properties
           </Button>
         </Grid>
       </Grid>

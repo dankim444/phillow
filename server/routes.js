@@ -256,6 +256,8 @@ const getAverageHousePriceByZip = async (req, res) => {
 // [USED] [USED] [USED]
 // Route 8: GET /zipcode_info
 // Description: Gets the average market value, property count, population, total crimes, police stations, and crime rate per capita for each zip code
+
+// POST-Optimization: ~1 s
 const getZipCodeInfo = async (req, res) => {
   connection.query(
     `
@@ -367,60 +369,52 @@ const getStreetPatterns = async (req, res) => {
   );
 };
 
-// Route 10: GET /lowest_crime_zips
+// Route 10: GET /safe_high_value_properties
 /*
-Description: Complex query that allows a user to provide up to 3 crimes they are most worried about and then provides a sorted list of zipcodes with the
-lowest per capita crime of those types along with the average price of a property in the zipcode.
+Description: This route allows a user to provide a minimum market value and a specific crime type
+they want to avoid. It returns a list of properties where all properties have a market value above the
+specified threshold and there are no reported crimes of the specified type.
 */
 
-// duration: 343 ms
-const getLowestCrimeZips = async (req, res) => {
-  const { crime_type1, crime_type2, crime_type3 } = req.query;
+// duration:
+const getSafeProperties = async (req, res) => {
+  const { min_market_value, crime_type } = req.query;
+
+  if (!min_market_value || !crime_type) {
+    return res
+      .status(400)
+      .json({ error: "Missing required query parameters." });
+  }
 
   connection.query(
     `
-    WITH filtered_crimes AS (
-        SELECT 
-            c.zip_code, 
-            COUNT(c.object_id) AS specific_crime_count
-        FROM crime_data AS c
-        WHERE c.text_general_code IN ($1, $2, $3)
-        GROUP BY c.zip_code
-    ),
-    crime_per_capita AS (
-        SELECT 
-            fc.zip_code, 
-            fc.specific_crime_count, 
-            zp.population, 
-            (fc.specific_crime_count * 1.0) / zp.population AS specific_crime_per_capita
-        FROM filtered_crimes AS fc
-        JOIN zipcode_population AS zp ON fc.zip_code = zp.zip_code
-        WHERE zp.population > 0  
-    ),
-    avg_property_price AS (
-        SELECT 
-            zip_code, 
-            AVG(market_value) AS avg_price 
-        FROM properties
-        GROUP BY zip_code
-    )
     SELECT 
-        cpc.zip_code, 
-        cpc.specific_crime_per_capita, 
-        app.avg_price 
-    FROM crime_per_capita AS cpc
-    JOIN avg_property_price AS app ON cpc.zip_code = app.zip_code
-    ORDER BY cpc.specific_crime_per_capita ASC
-    LIMIT 10;
+        p.location,
+        p.market_value,
+        p.zip_code,
+        zp.population,
+        (SELECT COUNT(*) FROM crime_data WHERE zip_code = p.zip_code) as total_crimes_in_zip
+    FROM properties p
+    JOIN zipcode_population zp ON p.zip_code = zp.zip_code
+    WHERE 
+        p.market_value > $1 
+        AND NOT EXISTS (
+            SELECT 1
+            FROM crime_data c
+            WHERE 
+                c.zip_code = p.zip_code 
+                AND c.text_general_code = $2
+        )
+    ORDER BY p.market_value
+    LIMIT 100;
     `,
-    [crime_type1, crime_type2, crime_type3],
+    [min_market_value, crime_type],
     (err, data) => {
       if (err) {
-        console.error(err);
-        res.status(500).json([]);
-      } else {
-        res.json(data.rows);
+        console.error("Error executing query:", err);
+        return res.status(500).json({ error: "Database query failed." });
       }
+      res.json(data.rows);
     }
   );
 };
@@ -640,7 +634,7 @@ Description: Gets crimes within a variable radius of variable address
 */
 
 // [USED] [USED] [USED]
-// New route: POST /crimes_near_address
+// New route: POST /crime_near_address
 const getCrimesNearAddress = async (req, res) => {
   const { address, radius } = req.body;
 
@@ -798,7 +792,7 @@ module.exports = {
   getAverageHousePriceByZip,
   getZipCodeInfo,
   getStreetPatterns,
-  getLowestCrimeZips,
+  getSafeProperties,
   getInvestmentScores,
   getStreetSafetyScores,
   getStreetInfo,

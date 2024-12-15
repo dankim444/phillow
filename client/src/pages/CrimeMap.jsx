@@ -76,7 +76,9 @@ export default function CrimeMap() {
     setPoliceStationData([]);
 
     try {
-      const response = await fetch(`http://localhost:8080/crimes_in_zip/${zipcode}`);
+      const response = await fetch(
+        `http://localhost:8080/crimes_in_zip/${zipcode}`
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
