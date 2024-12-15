@@ -634,6 +634,11 @@ const getStreetInfo = async (req, res) => {
   );
 };
 
+// NEW Route: getCrimesNearAddress
+/* [Xiaoshen]
+Description: Gets crimes within a variable radius of variable address
+*/
+
 // [USED] [USED] [USED]
 // New route: POST /crimes_near_address
 const getCrimesNearAddress = async (req, res) => {
