@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  TextField,
-  Button,
-  Box,
-  Typography,
-} from "@mui/material";
+import { TextField, Button, Box, Typography } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -58,7 +53,9 @@ export default function CrimeMap() {
     setPoliceStationData([]);
 
     try {
-      const response = await fetch(`http://localhost:8080/crimes_in_zip/${zipcode}`);
+      const response = await fetch(
+        `http://localhost:8080/crimes_in_zip/${zipcode}`
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -69,7 +66,9 @@ export default function CrimeMap() {
       } else {
         setCrimeData(data);
       }
-      const stationResponse = await fetch(`http://localhost:8080/police_stations/${zipcode}`);
+      const stationResponse = await fetch(
+        `http://localhost:8080/police_stations/${zipcode}`
+      );
       if (!stationResponse.ok) {
         throw new Error(`HTTP error! status: ${stationResponse.status}`);
       }
@@ -164,7 +163,11 @@ export default function CrimeMap() {
           onChange={(e) => setRadius(e.target.value)}
           sx={{ marginRight: "10px", width: "150px" }}
         />
-        <Button variant="contained" size="large" onClick={fetchCrimeDataByAddress}>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={fetchCrimeDataByAddress}
+        >
           Search by Address
         </Button>
       </Box>
@@ -198,7 +201,7 @@ export default function CrimeMap() {
             >
               <Popup>
                 <Typography variant="body2">
-                <strong>Type:</strong> {crime.text_general_code}
+                  <strong>Type:</strong> {crime.text_general_code}
                 </Typography>
                 <Typography variant="body2">
                   <strong>Count:</strong> {crime.crime_count}
@@ -213,7 +216,9 @@ export default function CrimeMap() {
               icon={createStarIcon()}
             >
               <Popup>
-                <Typography variant="body2"><strong>Police Station</strong></Typography>
+                <Typography variant="body2">
+                  <strong>Police Station</strong>
+                </Typography>
                 {station.location && (
                   <Typography variant="body2">
                     <strong>Address:</strong> {station.location}

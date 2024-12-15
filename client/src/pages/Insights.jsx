@@ -91,7 +91,7 @@ export default function Insights() {
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis />
+              <YAxis domain={[0, 1000000]} />
               <Tooltip />
               <Bar dataKey="avgMarketValue" fill="#82ca9d" />
             </BarChart>

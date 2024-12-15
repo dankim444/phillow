@@ -256,6 +256,8 @@ const getAverageHousePriceByZip = async (req, res) => {
 // [USED] [USED] [USED]
 // Route 8: GET /zipcode_info
 // Description: Gets the average market value, property count, population, total crimes, police stations, and crime rate per capita for each zip code
+
+// POST-Optimization: ~1 s
 const getZipCodeInfo = async (req, res) => {
   connection.query(
     `
@@ -732,7 +734,7 @@ const getStreetInfo = async (req, res) => {
 };
 
 // [USED] [USED] [USED]
-// New route: POST /crimes_near_address
+// New route: POST /crime_near_address
 const getCrimesNearAddress = async (req, res) => {
   const { address, radius } = req.body;
 
