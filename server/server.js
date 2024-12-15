@@ -17,8 +17,6 @@ app.get("/average_house_price/:zipcode", routes.getAverageHousePriceByZip); // d
 app.get("/zipcode_info", routes.getZipCodeInfo); // done - Insights.js
 app.get("/street_patterns", routes.getStreetPatterns); // done - Insights.js
 app.get("/safe_high_value_properties", routes.getSafeProperties); // done - Insights.js
-app.get("/investment_scores", routes.getInvestmentScores);
-app.get("/street_safety_scores", routes.getStreetSafetyScores);
 app.get("/street_info", routes.getStreetInfo); // done - Insights.js
 app.post("/crime_near_address", routes.getCrimesNearAddress); // done - CrimeMap.js
 app.get("/property_location", routes.getPropertyLocation); // done - PropertyCard.js
