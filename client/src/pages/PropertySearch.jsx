@@ -7,14 +7,18 @@ import {
   Box,
   Pagination,
   Slider,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
 } from "@mui/material";
 import PropertyCard from "../components/PropertyCard";
 
 export default function PropertySearch() {
-  const [zipcode, setZipcode] = useState("");
-  const [address, setAddress] = useState("");
-  const [crimeStats, setCrimeStats] = useState(null);
-  const [avgHousePrice, setAvgHousePrice] = useState("");
+  const [zipcode, setZipcode] = useState(""); // Selected zip code
+  const [address, setAddress] = useState(""); // Entered address
+  const [crimeStats, setCrimeStats] = useState(null); // Crime statistics
+  const [avgHousePrice, setAvgHousePrice] = useState(""); // Average house price
   const [filters, setFilters] = useState({
     min_bathrooms: 0,
     max_bathrooms: 10,
@@ -24,13 +28,21 @@ export default function PropertySearch() {
     max_livable_area: 10000,
     min_market_value: 0,
     max_market_value: 5000000,
-  });
-  const [properties, setProperties] = useState([]);
-  const [addressSearchResults, setAddressSearchResults] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const propertiesPerPage = 12;
+  }); // Filter settings
+  const [properties, setProperties] = useState([]); // Properties for zip code search
+  const [addressSearchResults, setAddressSearchResults] = useState([]); // Results for address search
+  const [currentPage, setCurrentPage] = useState(1); // Current page
+  const propertiesPerPage = 12; // Number of properties displayed per page
 
-  // Handle Zip Code and Filter Search
+  const zipCodes = [
+    "19102", "19103", "19104", "19106", "19107", "19111", "19114", "19115",
+    "19116", "19118", "19119", "19120", "19121", "19122", "19123", "19124",
+    "19125", "19126", "19127", "19128", "19129", "19130", "19131", "19132",
+    "19133", "19134", "19135", "19136", "19137", "19138", "19139", "19140",
+    "19141", "19142", "19143", "19144", "19145", "19146", "19147", "19148",
+    "19149", "19150", "19151", "19152", "19153", "19154",
+  ];
+
   const handleSearchByZip = async () => {
     try {
       const propertiesURL = new URL("http://localhost:8080/properties_in_zip");
@@ -158,7 +170,6 @@ export default function PropertySearch() {
 
   return (
     <Box sx={{ padding: "20px" }}>
-      {/* Search Section */}
       <Box
         sx={{
           backgroundColor: "#f8f9fa",
@@ -173,22 +184,34 @@ export default function PropertySearch() {
           Find Your Dream Home
         </Typography>
         <Typography variant="body1" color="textSecondary" gutterBottom>
-          Search for properties in your desired neighborhood by zip code and/or
+          Search for properties in your desired neighborhood by zip code or
           specific address.
         </Typography>
 
-        {/* Zip Code Search */}
+        {/* Zip Code Search with Dropdown */}
         <Box
           sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}
         >
-          <TextField
-            label="Enter Zip Code"
-            variant="outlined"
-            value={zipcode}
-            onChange={(e) => setZipcode(e.target.value)}
-            sx={{ marginRight: "10px", width: "300px" }}
-          />
-          <Button variant="contained" size="large" onClick={handleSearchByZip}>
+          <FormControl sx={{ width: "300px", marginRight: "10px" }}>
+            <InputLabel>Select Zip Code</InputLabel>
+            <Select
+              value={zipcode}
+              onChange={(e) => setZipcode(e.target.value)}
+              label="Select Zip Code"
+            >
+              {zipCodes.map((zip) => (
+                <MenuItem key={zip} value={zip}>
+                  {zip}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => handleSearchByZip()}
+            disabled={!zipcode} // Disable button if no zip code selected
+          >
             Search by Zip Code
           </Button>
         </Box>
@@ -207,7 +230,7 @@ export default function PropertySearch() {
           <Button
             variant="contained"
             size="large"
-            onClick={handleSearchByAddress}
+            onClick={() => handleSearchByAddress()}
           >
             Search by Address
           </Button>
@@ -293,7 +316,8 @@ export default function PropertySearch() {
         </Box>
       }
 
-      {/* Crime Statistics Display */}
+
+      {/* Display crime stats */}
       {crimeStats && (
         <Box
           sx={{
@@ -305,7 +329,9 @@ export default function PropertySearch() {
             marginBottom: "20px",
           }}
         >
-          <Typography variant="h6">Safety Information for Zip Code </Typography>
+          <Typography variant="h6">
+            Safety Information for Zip Code {zipcode}
+          </Typography>
           <Typography>
             <strong>Population:</strong> {crimeStats.population}
           </Typography>
@@ -319,11 +345,11 @@ export default function PropertySearch() {
         </Box>
       )}
 
-      {/* Average House Price Display */}
+      {/* Display average house price */}
       {avgHousePrice && (
         <Box
           sx={{
-            backgroundColor: "#e8f5e9", // Light green for house price
+            backgroundColor: "#e8f5e9",
             padding: "20px",
             borderRadius: "8px",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
@@ -331,35 +357,17 @@ export default function PropertySearch() {
             marginBottom: "20px",
           }}
         >
-          <Typography variant="h6">Average House Price for Zip Code</Typography>
+          <Typography variant="h6">
+            Average House Price for Zip Code {zipcode}
+          </Typography>
           <Typography>
             <strong>Average Price:</strong> $
-            {Number(avgHousePrice.avg_house_price).toFixed(0)}
+            {Number(avgHousePrice.avg_house_price).toFixed(2)}
           </Typography>
         </Box>
       )}
 
-      {properties.length === 0 &&
-        addressSearchResults.length === 0 &&
-        zipcode === "" &&
-        address === "" && (
-          <Box sx={{ textAlign: "center", marginTop: "20px", color: "gray" }}>
-            <Typography variant="h6">
-              Please enter a zip code or address to search for properties.
-            </Typography>
-          </Box>
-        )}
-
-      {properties.length === 0 &&
-        addressSearchResults.length === 0 &&
-        (zipcode || address) && (
-          <Box sx={{ textAlign: "center", marginTop: "20px", color: "gray" }}>
-            <Typography variant="h6">
-              No results found. Please try a different zip code or address.
-            </Typography>
-          </Box>
-        )}
-      {/* Property Display Section */}
+      {/* Display properties */}
       <Grid container spacing={3}>
         {currentAddresses.map((property, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
@@ -371,13 +379,7 @@ export default function PropertySearch() {
       {/* Pagination */}
       {(addressSearchResults.length > propertiesPerPage ||
         properties.length > propertiesPerPage) && (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            marginTop: "20px",
-          }}
-        >
+        <Box sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
           <Pagination
             count={Math.ceil(
               (addressSearchResults.length > 0
@@ -393,3 +395,4 @@ export default function PropertySearch() {
     </Box>
   );
 }
+
