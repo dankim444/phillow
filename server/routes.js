@@ -28,6 +28,7 @@ connection.connect((err) => err && console.log(err));
 const getProperties = async (req, res) => {
   const {
     zipcode,
+    address,
     min_bathrooms,
     max_bathrooms,
     min_bedrooms,
@@ -36,7 +37,6 @@ const getProperties = async (req, res) => {
     max_livable_area,
     min_market_value,
     max_market_value,
-    address,
   } = req.query;
 
   let query = `
