@@ -15,6 +15,8 @@ import {
 import PropertyCard from "../components/PropertyCard";
 import { Link } from "react-router-dom"; // Import Link
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
 export default function PropertySearch() {
   const [zipcode, setZipcode] = useState(""); // Selected zip code
   const [address, setAddress] = useState(""); // Entered address
@@ -99,7 +101,7 @@ export default function PropertySearch() {
     if (!validateInputs()) return;
 
     try {
-      const propertiesURL = new URL("http://localhost:8080/properties");
+      const propertiesURL = new URL(`${API_URL}/properties`);
 
       if (zipcode) {
         propertiesURL.searchParams.append("zipcode", zipcode);
@@ -128,7 +130,7 @@ export default function PropertySearch() {
       // Fetch crime stats by zip code
       if (zipcode) {
         const crimeResponse = await fetch(
-          `http://localhost:8080/crime_per_capita/${zipcode}`
+          `${API_URL}/crime_per_capita/${zipcode}`
         );
         if (!crimeResponse.ok) {
           throw new Error(`HTTP error! status: ${crimeResponse.status}`);
@@ -140,7 +142,7 @@ export default function PropertySearch() {
       // Fetch average house price by zip code
       if (zipcode) {
         const avgPriceResponse = await fetch(
-          `http://localhost:8080/average_house_price/${zipcode}`
+          `${API_URL}/average_house_price/${zipcode}`
         );
         if (!avgPriceResponse.ok) {
           throw new Error(`HTTP error! status: ${avgPriceResponse.status}`);

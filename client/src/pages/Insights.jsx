@@ -6,6 +6,8 @@ import StreetPatterns from "../components/StreetPatterns";
 import StreetInfo from "../components/StreetInfo";
 import SafeHighValueProperties from "../components/SafeHighValueProperties";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
 const useFetchData = (endpoint) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -44,13 +46,13 @@ export default function Insights() {
     // Set endpoint based on the selected insight
     switch (insight) {
       case "streetPatterns":
-        setEndpoint("http://localhost:8080/street_patterns");
+        setEndpoint(`${API_URL}/street_patterns`);
         break;
       case "streetInfo":
-        setEndpoint("http://localhost:8080/street_info");
+        setEndpoint(`${API_URL}/street_info`);
         break;
       case "zipcodeInfo":
-        setEndpoint("http://localhost:8080/zipcode_info");
+        setEndpoint(`${API_URL}/zipcode_info`);
         break;
       case "propertyInfo":
         setEndpoint(null); // Do not set endpoint for propertyInfo

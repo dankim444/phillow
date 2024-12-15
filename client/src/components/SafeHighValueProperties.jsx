@@ -11,6 +11,8 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 const SafeHighValueProperties = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ const SafeHighValueProperties = () => {
     setLoading(true);
     setSubmitted(true);
     fetch(
-      `http://localhost:8080/safe_high_value_properties?min_market_value=${minMarketValue}&crime_type=${crimeType}`
+      `${API_URL}/safe_high_value_properties?min_market_value=${minMarketValue}&crime_type=${crimeType}`
     )
       .then((response) => {
         if (!response.ok) {

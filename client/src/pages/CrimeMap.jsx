@@ -23,6 +23,8 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 // Function to determine marker color based on crime count
 const getMarkerColor = (crimeCount) => {
   if (crimeCount < 5) return "green"; // Low crime count
@@ -131,7 +133,7 @@ export default function CrimeMap() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/crimes_in_zip/${zipcode}`
+        `${API_URL}/crimes_in_zip/${zipcode}`
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -140,7 +142,7 @@ export default function CrimeMap() {
       setCrimeData(crimeResults || []);
 
       const stationResponse = await fetch(
-        `http://localhost:8080/police_stations/${zipcode}`
+        `${API_URL}/police_stations/${zipcode}`
       );
       if (!stationResponse.ok) {
         throw new Error(`HTTP error! status: ${stationResponse.status}`);
@@ -158,7 +160,7 @@ export default function CrimeMap() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8080/crime_near_address", {
+      const response = await fetch(`${API_URL}/crime_near_address`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -13,6 +13,8 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 const createpropertyIcon = () =>
   L.divIcon({
     className: "custom-property-marker",
@@ -61,7 +63,7 @@ export default function PropertyCard({ property }) {
     const fullAddress = `${address}, Philadelphia, PA ${zipcode}`;
     try {
       const response = await fetch(
-        `http://localhost:8080/property_location?address=${fullAddress}`
+        `${API_URL}/property_location?address=${fullAddress}`
       );
       if (response.ok) {
         const data = await response.json();
