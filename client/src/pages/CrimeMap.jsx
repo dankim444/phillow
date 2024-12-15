@@ -14,6 +14,7 @@ import {
   TableContainer,
   Paper,
 } from "@mui/material";
+import { Link } from "react-router-dom"; // Import Link
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -152,7 +153,22 @@ export default function CrimeMap() {
   };
 
   return (
+    
     <Box sx={{ padding: "20px" }}>
+      {/* Home Button */}
+      <Button
+        component={Link}
+        to="/"
+        variant="contained"
+        color="primary"
+        sx={{
+          marginBottom: "20px",
+          padding: "8px 16px",
+          fontSize: "1rem",
+        }}
+      >
+        Home
+      </Button>
       <Typography variant="h4" gutterBottom>
         Crime Map
       </Typography>

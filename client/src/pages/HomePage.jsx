@@ -1,8 +1,28 @@
-import React from "react";
-import { Typography, Button, Grid, Box } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Typography, Button, Grid, Box, Switch, FormControlLabel } from "@mui/material";
 import { Link } from "react-router-dom";
 
 export default function HomePage() {
+  // Retrieve darkMode preference from localStorage, default to false
+  const [darkMode, setDarkMode] = useState(
+    () => JSON.parse(localStorage.getItem("darkMode")) || false
+  );
+
+  // Function to toggle dark mode and save it to localStorage
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      const newMode = !prev;
+      localStorage.setItem("darkMode", JSON.stringify(newMode)); // Save preference
+      return newMode;
+    });
+  };
+
+  // Apply saved mode when component mounts
+  useEffect(() => {
+    const savedMode = JSON.parse(localStorage.getItem("darkMode"));
+    if (savedMode) setDarkMode(savedMode);
+  }, []);
+
   return (
     <Box
       sx={{
@@ -10,20 +30,22 @@ export default function HomePage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundImage: "url('/images/background1.png')", // Replace with the actual image path
-        backgroundSize: "cover", // Ensures the image covers the entire background
-        backgroundPosition: "center", // Centers the image
-        backgroundRepeat: "no-repeat", // Prevents the image from repeating
+        backgroundImage: darkMode
+          ? "url('/images/background2.png')" // Dark mode background
+          : "url('/images/background1.png')", // Light mode background
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
         padding: "20px",
+        color: darkMode ? "#f0f0f0" : "#333",
       }}
-    
     >
       <Grid
         container
         direction="column"
         alignItems="center"
         sx={{
-          backgroundColor: "#fff", // Clean white card
+          backgroundColor: darkMode ? "rgba(50, 50, 50, 0.9)" : "#fff",
           borderRadius: "16px",
           boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
           padding: "40px",
@@ -31,11 +53,24 @@ export default function HomePage() {
           textAlign: "center",
         }}
       >
+        {/* Dark Mode Toggle */}
+        <FormControlLabel
+          control={
+            <Switch checked={darkMode} onChange={toggleDarkMode} color="primary" />
+          }
+          label="Dark Mode"
+          sx={{
+            alignSelf: "flex-end",
+            marginBottom: "20px",
+            color: darkMode ? "#f0f0f0" : "#333",
+          }}
+        />
+
         <Typography
           variant="h2"
           gutterBottom
           sx={{
-            color: "#003b64", // Zillow-inspired blue
+            color: darkMode ? "#80d8ff" : "#003b64",
             fontWeight: "bold",
           }}
         >
@@ -46,7 +81,7 @@ export default function HomePage() {
           sx={{
             marginBottom: "20px",
             fontSize: "1.2rem",
-            color: "#666", // Neutral gray for supporting text
+            color: darkMode ? "#ccc" : "#666",
           }}
         >
           Discover properties, analyze neighborhoods, and uncover crime data in
@@ -65,8 +100,8 @@ export default function HomePage() {
             component={Link}
             to="/property-search"
             sx={{
-              backgroundColor: "#0074e4", // Zillow blue
-              "&:hover": { backgroundColor: "#005bb5" }, // Darker blue hover
+              backgroundColor: darkMode ? "#80d8ff" : "#0074e4",
+              "&:hover": { backgroundColor: darkMode ? "#4db8e4" : "#005bb5" },
               padding: "12px",
               fontSize: "1.1rem",
               color: "#fff",
@@ -79,8 +114,8 @@ export default function HomePage() {
             component={Link}
             to="/crime-map"
             sx={{
-              backgroundColor: "#4d90fe", // Complementary lighter blue
-              "&:hover": { backgroundColor: "#357acb" }, // Darker blue hover
+              backgroundColor: darkMode ? "#6272a4" : "#4d90fe",
+              "&:hover": { backgroundColor: darkMode ? "#49527c" : "#357acb" },
               padding: "12px",
               fontSize: "1.1rem",
               color: "#fff",
@@ -93,8 +128,8 @@ export default function HomePage() {
             component={Link}
             to="/insights"
             sx={{
-              backgroundColor: "#6c5ce7",
-              "&:hover": { backgroundColor: "#4b4dae" },
+              backgroundColor: darkMode ? "#bd93f9" : "#6c5ce7",
+              "&:hover": { backgroundColor: darkMode ? "#9274c9" : "#4b4dae" },
               padding: "12px",
               fontSize: "1.1rem",
               color: "#fff",
