@@ -742,6 +742,11 @@ const getStreetInfo = async (req, res) => {
   );
 };
 
+// NEW Route: getCrimesNearAddress
+/* [Xiaoshen]
+Description: Gets crimes within a variable radius of variable address
+*/
+
 const { exec } = require("child_process");
 const path = require("path");
 
