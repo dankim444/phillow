@@ -49,7 +49,7 @@ export default function PropertyCard({ property }) {
 
   const handleOpenModal = () => {
     setOpenModal(true);
-    fetchGeocodeData(property.location);
+    fetchGeocodeData(property.location, property.zip_code);
   };
 
   const handleCloseModal = () => {
@@ -57,10 +57,11 @@ export default function PropertyCard({ property }) {
   };
 
   // Fetch latitude and longitude data for the property
-  const fetchGeocodeData = async (address) => {
+  const fetchGeocodeData = async (address, zipcode) => {
+    const fullAddress = `${address}, Philadelphia, PA ${zipcode}`;
     try {
       const response = await fetch(
-        `http://localhost:8080/property_location?address=${address}`
+        `http://localhost:8080/property_location?address=${fullAddress}`
       );
       if (response.ok) {
         const data = await response.json();
