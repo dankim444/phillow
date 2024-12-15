@@ -30,8 +30,7 @@ export default function PropertySearch() {
     min_market_value: 0,
     max_market_value: 5000000,
   }); // Filter settings
-  const [properties, setProperties] = useState([]); // Properties for zip code search
-  const [addressSearchResults, setAddressSearchResults] = useState([]); // Results for address search
+  const [properties, setProperties] = useState([]); // Properties for search results
   const [currentPage, setCurrentPage] = useState(1); // Current page
   const propertiesPerPage = 12; // Number of properties displayed per page
 
@@ -84,10 +83,17 @@ export default function PropertySearch() {
     "19154",
   ];
 
-  const handleSearchByZip = async () => {
+  const handleSearch = async () => {
     try {
-      const propertiesURL = new URL("http://localhost:8080/properties_in_zip");
-      propertiesURL.searchParams.append("zipcode", zipcode);
+      const propertiesURL = new URL("http://localhost:8080/properties");
+
+      if (zipcode) {
+        propertiesURL.searchParams.append("zipcode", zipcode);
+      }
+
+      if (address) {
+        propertiesURL.searchParams.append("address", address);
+      }
 
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
@@ -95,10 +101,6 @@ export default function PropertySearch() {
             propertiesURL.searchParams.append(key, value);
           }
         });
-      }
-
-      if (address) {
-        propertiesURL.searchParams.append("address", address);
       }
 
       // Fetch properties by zip code and optionally by filters and address
@@ -133,7 +135,6 @@ export default function PropertySearch() {
         setAvgHousePrice(price);
       }
 
-      setAddressSearchResults([]); // Clear specific property display
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -143,71 +144,10 @@ export default function PropertySearch() {
     }
   };
 
-  // Handle Specific Address Search
-  const handleSearchByAddress = async () => {
-    try {
-      // Construct URL with optional zipcode parameter
-      const url = new URL(
-        `http://localhost:8080/property/${encodeURIComponent(address)}`
-      );
-      if (zipcode) {
-        url.searchParams.append("zipcode", zipcode);
-      }
-
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            url.searchParams.append(key, value);
-          }
-        });
-      }
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setAddressSearchResults(data);
-      setProperties([]); // Clear zip code search results
-
-      // If zipcode is provided, also fetch zipcode-related data
-      if (zipcode) {
-        // Fetch crime stats
-        const crimeResponse = await fetch(
-          `http://localhost:8080/crime_per_capita/${zipcode}`
-        );
-        if (crimeResponse.ok) {
-          const crimeData = await crimeResponse.json();
-          setCrimeStats(crimeData);
-        }
-
-        // Fetch average house price
-        const avgPriceResponse = await fetch(
-          `http://localhost:8080/average_house_price/${zipcode}`
-        );
-        if (avgPriceResponse.ok) {
-          const price = await avgPriceResponse.json();
-          setAvgHousePrice(price);
-        }
-      } else {
-        // Clear zipcode-related data if no zipcode provided
-        setCrimeStats(null);
-        setAvgHousePrice("");
-      }
-    } catch (error) {
-      console.error("Error fetching property by address:", error);
-      setAddressSearchResults([]);
-    }
-  };
-
   // Handle Pagination
   const startIndex = (currentPage - 1) * propertiesPerPage;
   const endIndex = startIndex + propertiesPerPage;
   const currentProperties = properties.slice(startIndex, endIndex);
-  const currentAddresses =
-    addressSearchResults.length > 0
-      ? addressSearchResults.slice(startIndex, endIndex)
-      : currentProperties;
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
@@ -277,7 +217,7 @@ export default function PropertySearch() {
           <Button
             variant="contained"
             size="large"
-            onClick={() => handleSearchByZip()}
+            onClick={handleSearch}
             disabled={!zipcode} // Disable button if no zip code selected
           >
             Search by Zip Code
@@ -298,7 +238,7 @@ export default function PropertySearch() {
           <Button
             variant="contained"
             size="large"
-            onClick={() => handleSearchByAddress()}
+            onClick={handleSearch}
           >
             Search by Address
           </Button>
@@ -376,7 +316,7 @@ export default function PropertySearch() {
             <Button
               variant="contained"
               size="large"
-              onClick={handleSearchByZip}
+              onClick={handleSearch}
             >
               Apply Filters
             </Button>
@@ -436,7 +376,7 @@ export default function PropertySearch() {
 
       {/* Display properties */}
       <Grid container spacing={3}>
-        {currentAddresses.map((property, index) => (
+        {currentProperties.map((property, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
             <PropertyCard property={property} />
           </Grid>
@@ -444,17 +384,16 @@ export default function PropertySearch() {
       </Grid>
 
       {/* Pagination */}
-      {(addressSearchResults.length > propertiesPerPage ||
-        properties.length > propertiesPerPage) && (
+      {properties.length > propertiesPerPage && (
         <Box
-          sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "20px",
+          }}
         >
           <Pagination
-            count={Math.ceil(
-              (addressSearchResults.length > 0
-                ? addressSearchResults.length
-                : properties.length) / propertiesPerPage
-            )}
+            count={Math.ceil(properties.length / propertiesPerPage)}
             page={currentPage}
             onChange={handlePageChange}
             color="primary"
