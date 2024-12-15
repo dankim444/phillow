@@ -1,6 +1,6 @@
 import requests
-import time
-import sys 
+import sys
+import json
 
 def geocode_address(address):
     url = "https://nominatim.openstreetmap.org/search"
@@ -30,7 +30,6 @@ def geocode_address(address):
         return {"error": str(e)}
 
 if __name__ == "__main__":
-    import json
     address = " ".join(sys.argv[1:])  # Combine command-line args into one string
     result = geocode_address(address)
     print(json.dumps(result))  # Output valid JSON
