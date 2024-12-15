@@ -22,6 +22,7 @@ app.get("/street_safety_scores", routes.getStreetSafetyScores);
 app.get("/street_info", routes.getStreetInfo); // done - Insights.js
 
 app.post("/crime_near_address", routes.getCrimesNearAddress); // added - CrimeMap.js
+app.get("/property_location", routes.getPropertyLocation); // added - PropertyCard.js
 
 app.listen(config.server_port, () => {
   console.log(

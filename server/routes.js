@@ -1,5 +1,7 @@
 const { Pool, types } = require("pg");
 const config = require("./config.json");
+const { exec } = require("child_process");
+const path = require("path");
 
 // Override the default parsing for BIGINT (PostgreSQL type ID 20)
 types.setTypeParser(20, (val) => parseInt(val, 10)); // DO NOT DELETE THIS
@@ -729,9 +731,8 @@ const getStreetInfo = async (req, res) => {
   );
 };
 
-const { exec } = require("child_process");
-const path = require("path");
-
+// [USED] [USED] [USED]
+// New route: POST /crimes_near_address
 const getCrimesNearAddress = async (req, res) => {
   const { address, radius } = req.body;
 
@@ -852,6 +853,31 @@ const getCrimesNearAddress = async (req, res) => {
   }
 };
 
+// [USED] [USED] [USED]
+// New route: GET /property_location
+const getPropertyLocation = async (req, res) => {
+  const { address } = req.query;
+
+  connection.query(
+    `
+    SELECT lat, lng
+    FROM properties
+    WHERE location = $1
+    `,
+    [address],
+    (err, data) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({});
+      } else if (data.rows.length === 0) {
+        res.status(404).json({ message: `No data found for address ${address}` });
+      } else {
+        res.json(data.rows[0]);
+      }
+    }
+  );
+};
+
 module.exports = {
   getPropertyByAddress,
   getPropertiesInZip,
@@ -866,4 +892,5 @@ module.exports = {
   getStreetSafetyScores,
   getStreetInfo,
   getCrimesNearAddress,
+  getPropertyLocation,
 };
