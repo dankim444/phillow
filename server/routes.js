@@ -22,51 +22,13 @@ connection.connect((err) => err && console.log(err));
 /** Basic Routes **/
 
 // [USED] [USED] [USED]
-// Route 1: GET /property/:address
-// Description: Base query to get specific house by address and optionally by zipcode
-const getPropertyByAddress = async (req, res) => {
-  const address = req.params.address;
-  const zipcode = req.query.zipcode;
-
-  const query = `
-    SELECT 
-      location,
-      zip_code,
-      market_value,
-      sale_price,
-      sale_date,
-      category_code_description,
-      number_of_bathrooms,
-      number_of_bedrooms,
-      total_livable_area,
-      total_area,
-      year_built,
-      number_stories
-    FROM properties 
-    WHERE LOWER(location) LIKE LOWER('%' || $1 || '%')
-    ${zipcode ? "AND zip_code = $2" : ""} 
-    ORDER BY location
-  `;
-
-  const queryParams = zipcode ? [address, zipcode] : [address];
-
-  connection.query(query, queryParams, (err, data) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({});
-    } else {
-      res.json(data.rows);
-    }
-  });
-};
-
-// [USED] [USED] [USED]
-// Route 2: GET /properties_in_zip
+// Route 1: GET /properties
 // Description: Parameterized query to get all houses in zipcode, filter by number_of_bathrooms, number_of_bedrooms,
 // total_livable_area, market_value. Handles null values with defaults.
-const getPropertiesInZip = async (req, res) => {
+const getProperties = async (req, res) => {
   const {
     zipcode,
+    address,
     min_bathrooms,
     max_bathrooms,
     min_bedrooms,
@@ -75,10 +37,9 @@ const getPropertiesInZip = async (req, res) => {
     max_livable_area,
     min_market_value,
     max_market_value,
-    address,
   } = req.query;
 
-  const query = `
+  let query = `
     SELECT 
       location,
       zip_code,
@@ -93,39 +54,35 @@ const getPropertiesInZip = async (req, res) => {
       year_built,
       number_stories 
     FROM properties 
-    WHERE zip_code = $1 
-      AND number_of_bathrooms BETWEEN COALESCE($2, 0) AND COALESCE($3, 100)
-      AND number_of_bedrooms BETWEEN COALESCE($4, 0) AND COALESCE($5, 100)
-      AND total_livable_area BETWEEN COALESCE($6, 0) AND COALESCE($7, 100000)
-      AND market_value BETWEEN COALESCE($8, 0) AND COALESCE($9, 1000000000)
-      ${address ? "AND LOWER(location) LIKE LOWER('%' || $10 || '%')" : ""}
+    WHERE 
+      number_of_bathrooms BETWEEN COALESCE($1, 0) AND COALESCE($2, 13)
+      AND number_of_bedrooms BETWEEN COALESCE($3, 0) AND COALESCE($4, 100)
+      AND total_livable_area BETWEEN COALESCE($5, 0) AND COALESCE($6, 100000)
+      AND market_value BETWEEN COALESCE($7, 0) AND COALESCE($8, 1000000000)
+  `;
 
-    `;
+  const queryParams = [
+    min_bathrooms,
+    max_bathrooms,
+    min_bedrooms,
+    max_bedrooms,
+    min_livable_area,
+    max_livable_area,
+    min_market_value,
+    max_market_value,
+  ];
 
-  const queryParams = address
-    ? [
-        zipcode,
-        min_bathrooms,
-        max_bathrooms,
-        min_bedrooms,
-        max_bedrooms,
-        min_livable_area,
-        max_livable_area,
-        min_market_value,
-        max_market_value,
-        address,
-      ]
-    : [
-        zipcode,
-        min_bathrooms,
-        max_bathrooms,
-        min_bedrooms,
-        max_bedrooms,
-        min_livable_area,
-        max_livable_area,
-        min_market_value,
-        max_market_value,
-      ];
+  if (zipcode) {
+    query += " AND zip_code = $9";
+    queryParams.push(zipcode);
+  }
+
+  if (address) {
+    query += ` AND LOWER(location) LIKE LOWER('%' || $${
+      queryParams.length + 1
+    } || '%')`;
+    queryParams.push(address);
+  }
 
   connection.query(query, queryParams, (err, data) => {
     if (err) {
@@ -133,6 +90,29 @@ const getPropertiesInZip = async (req, res) => {
       res.status(500).json([]);
     } else {
       res.json(data.rows);
+    }
+  });
+};
+
+// [USED] [USED] [USED]
+// Route 2: GET /property_location
+const getPropertyLocation = (req, res) => {
+  const address = req.query.address;
+  const geocoderScript = path.resolve(__dirname, "../scripts", "geocoder.py");
+  exec(`python3 ${geocoderScript} "${address}"`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing script: ${stderr}`);
+      res.status(500).send({ error: stderr });
+    } else {
+      try {
+        const data = JSON.parse(stdout);
+        res.send(data);
+      } catch (parseError) {
+        console.error(`Error parsing JSON: ${parseError}`);
+        res
+          .status(500)
+          .send({ error: "Error parsing JSON response from script" });
+      }
     }
   });
 };
@@ -580,32 +560,9 @@ const getCrimesNearAddress = async (req, res) => {
   }
 };
 
-// [USED] [USED] [USED]
-// New route: GET /property_location
-const getPropertyLocation = (req, res) => {
-  const address = req.query.address;
-  const geocoderScript = path.resolve(__dirname, "../scripts", "geocoder.py");
-  exec(`python3 ${geocoderScript} "${address}"`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error executing script: ${stderr}`);
-      res.status(500).send({ error: stderr });
-    } else {
-      try {
-        const data = JSON.parse(stdout);
-        res.send(data);
-      } catch (parseError) {
-        console.error(`Error parsing JSON: ${parseError}`);
-        res
-          .status(500)
-          .send({ error: "Error parsing JSON response from script" });
-      }
-    }
-  });
-};
-
 module.exports = {
-  getPropertyByAddress,
-  getPropertiesInZip,
+  getProperties,
+  getPropertyLocation,
   getCrimePerCapitaByZipcode,
   getCrimesInZip,
   getPoliceStationsInZip,
@@ -615,5 +572,4 @@ module.exports = {
   getSafeProperties,
   getStreetInfo,
   getCrimesNearAddress,
-  getPropertyLocation,
 };

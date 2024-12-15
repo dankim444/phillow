@@ -10,7 +10,6 @@ import {
   Button,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 const SafeHighValueProperties = () => {
   const [data, setData] = useState([]);

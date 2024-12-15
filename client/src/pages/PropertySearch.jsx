@@ -30,24 +30,70 @@ export default function PropertySearch() {
     min_market_value: 0,
     max_market_value: 5000000,
   }); // Filter settings
-  const [properties, setProperties] = useState([]); // Properties for zip code search
-  const [addressSearchResults, setAddressSearchResults] = useState([]); // Results for address search
+  const [properties, setProperties] = useState([]); // Properties for search results
   const [currentPage, setCurrentPage] = useState(1); // Current page
   const propertiesPerPage = 12; // Number of properties displayed per page
 
   const zipCodes = [
-    "19102", "19103", "19104", "19106", "19107", "19111", "19114", "19115",
-    "19116", "19118", "19119", "19120", "19121", "19122", "19123", "19124",
-    "19125", "19126", "19127", "19128", "19129", "19130", "19131", "19132",
-    "19133", "19134", "19135", "19136", "19137", "19138", "19139", "19140",
-    "19141", "19142", "19143", "19144", "19145", "19146", "19147", "19148",
-    "19149", "19150", "19151", "19152", "19153", "19154",
+    "19102",
+    "19103",
+    "19104",
+    "19106",
+    "19107",
+    "19111",
+    "19114",
+    "19115",
+    "19116",
+    "19118",
+    "19119",
+    "19120",
+    "19121",
+    "19122",
+    "19123",
+    "19124",
+    "19125",
+    "19126",
+    "19127",
+    "19128",
+    "19129",
+    "19130",
+    "19131",
+    "19132",
+    "19133",
+    "19134",
+    "19135",
+    "19136",
+    "19137",
+    "19138",
+    "19139",
+    "19140",
+    "19141",
+    "19142",
+    "19143",
+    "19144",
+    "19145",
+    "19146",
+    "19147",
+    "19148",
+    "19149",
+    "19150",
+    "19151",
+    "19152",
+    "19153",
+    "19154",
   ];
 
-  const handleSearchByZip = async () => {
+  const handleSearch = async () => {
     try {
-      const propertiesURL = new URL("http://localhost:8080/properties_in_zip");
-      propertiesURL.searchParams.append("zipcode", zipcode);
+      const propertiesURL = new URL("http://localhost:8080/properties");
+
+      if (zipcode) {
+        propertiesURL.searchParams.append("zipcode", zipcode);
+      }
+
+      if (address) {
+        propertiesURL.searchParams.append("address", address);
+      }
 
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
@@ -55,10 +101,6 @@ export default function PropertySearch() {
             propertiesURL.searchParams.append(key, value);
           }
         });
-      }
-
-      if (address) {
-        propertiesURL.searchParams.append("address", address);
       }
 
       // Fetch properties by zip code and optionally by filters and address
@@ -70,26 +112,29 @@ export default function PropertySearch() {
       setProperties(propertiesData);
 
       // Fetch crime stats by zip code
-      const crimeResponse = await fetch(
-        `http://localhost:8080/crime_per_capita/${zipcode}`
-      );
-      if (!crimeResponse.ok) {
-        throw new Error(`HTTP error! status: ${crimeResponse.status}`);
+      if (zipcode) {
+        const crimeResponse = await fetch(
+          `http://localhost:8080/crime_per_capita/${zipcode}`
+        );
+        if (!crimeResponse.ok) {
+          throw new Error(`HTTP error! status: ${crimeResponse.status}`);
+        }
+        const crimeData = await crimeResponse.json();
+        setCrimeStats(crimeData);
       }
-      const crimeData = await crimeResponse.json();
-      setCrimeStats(crimeData);
 
       // Fetch average house price by zip code
-      const avgPriceResponse = await fetch(
-        `http://localhost:8080/average_house_price/${zipcode}`
-      );
-      if (!avgPriceResponse.ok) {
-        throw new Error(`HTTP error! status: ${avgPriceResponse.status}`);
+      if (zipcode) {
+        const avgPriceResponse = await fetch(
+          `http://localhost:8080/average_house_price/${zipcode}`
+        );
+        if (!avgPriceResponse.ok) {
+          throw new Error(`HTTP error! status: ${avgPriceResponse.status}`);
+        }
+        const price = await avgPriceResponse.json();
+        setAvgHousePrice(price);
       }
-      const price = await avgPriceResponse.json();
-      setAvgHousePrice(price);
 
-      setAddressSearchResults([]); // Clear specific property display
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -99,63 +144,10 @@ export default function PropertySearch() {
     }
   };
 
-  // Handle Specific Address Search
-  const handleSearchByAddress = async () => {
-    try {
-      // Construct URL with optional zipcode parameter
-      const url = new URL(
-        `http://localhost:8080/property/${encodeURIComponent(address)}`
-      );
-      if (zipcode) {
-        url.searchParams.append("zipcode", zipcode);
-      }
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setAddressSearchResults(data);
-      setProperties([]); // Clear zip code search results
-
-      // If zipcode is provided, also fetch zipcode-related data
-      if (zipcode) {
-        // Fetch crime stats
-        const crimeResponse = await fetch(
-          `http://localhost:8080/crime_per_capita/${zipcode}`
-        );
-        if (crimeResponse.ok) {
-          const crimeData = await crimeResponse.json();
-          setCrimeStats(crimeData);
-        }
-
-        // Fetch average house price
-        const avgPriceResponse = await fetch(
-          `http://localhost:8080/average_house_price/${zipcode}`
-        );
-        if (avgPriceResponse.ok) {
-          const price = await avgPriceResponse.json();
-          setAvgHousePrice(price);
-        }
-      } else {
-        // Clear zipcode-related data if no zipcode provided
-        setCrimeStats(null);
-        setAvgHousePrice("");
-      }
-    } catch (error) {
-      console.error("Error fetching property by address:", error);
-      setAddressSearchResults([]);
-    }
-  };
-
   // Handle Pagination
   const startIndex = (currentPage - 1) * propertiesPerPage;
   const endIndex = startIndex + propertiesPerPage;
   const currentProperties = properties.slice(startIndex, endIndex);
-  const currentAddresses =
-    addressSearchResults.length > 0
-      ? addressSearchResults.slice(startIndex, endIndex)
-      : currentProperties;
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
@@ -181,21 +173,21 @@ export default function PropertySearch() {
           marginBottom: "20px",
         }}
       >
-       <Box sx={{ textAlign: "left" }}>
-      <Button
-        component={Link}
-        to="/"
-        variant="contained"
-        color="primary"
-        sx={{
-          marginBottom: "20px",
-          padding: "8px 16px",
-          fontSize: "1rem",
-        }}
-      >
-        Home
-      </Button>
-    </Box>
+        <Box sx={{ textAlign: "left" }}>
+          <Button
+            component={Link}
+            to="/"
+            variant="contained"
+            color="primary"
+            sx={{
+              marginBottom: "20px",
+              padding: "8px 16px",
+              fontSize: "1rem",
+            }}
+          >
+            Home
+          </Button>
+        </Box>
         <Typography variant="h4" gutterBottom>
           Find Your Dream Home
         </Typography>
@@ -225,7 +217,7 @@ export default function PropertySearch() {
           <Button
             variant="contained"
             size="large"
-            onClick={() => handleSearchByZip()}
+            onClick={handleSearch}
             disabled={!zipcode} // Disable button if no zip code selected
           >
             Search by Zip Code
@@ -246,7 +238,7 @@ export default function PropertySearch() {
           <Button
             variant="contained"
             size="large"
-            onClick={() => handleSearchByAddress()}
+            onClick={handleSearch}
           >
             Search by Address
           </Button>
@@ -324,14 +316,13 @@ export default function PropertySearch() {
             <Button
               variant="contained"
               size="large"
-              onClick={handleSearchByZip}
+              onClick={handleSearch}
             >
               Apply Filters
             </Button>
           </Box>
         </Box>
       }
-
 
       {/* Display crime stats */}
       {crimeStats && (
@@ -385,7 +376,7 @@ export default function PropertySearch() {
 
       {/* Display properties */}
       <Grid container spacing={3}>
-        {currentAddresses.map((property, index) => (
+        {currentProperties.map((property, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
             <PropertyCard property={property} />
           </Grid>
@@ -393,15 +384,16 @@ export default function PropertySearch() {
       </Grid>
 
       {/* Pagination */}
-      {(addressSearchResults.length > propertiesPerPage ||
-        properties.length > propertiesPerPage) && (
-        <Box sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+      {properties.length > propertiesPerPage && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "20px",
+          }}
+        >
           <Pagination
-            count={Math.ceil(
-              (addressSearchResults.length > 0
-                ? addressSearchResults.length
-                : properties.length) / propertiesPerPage
-            )}
+            count={Math.ceil(properties.length / propertiesPerPage)}
             page={currentPage}
             onChange={handlePageChange}
             color="primary"
@@ -411,4 +403,3 @@ export default function PropertySearch() {
     </Box>
   );
 }
-

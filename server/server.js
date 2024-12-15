@@ -8,8 +8,8 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // define endpoints
-app.get("/property/:address", routes.getPropertyByAddress); // done - PropertySearch.js
-app.get("/properties_in_zip", routes.getPropertiesInZip); // done - PropertySearch.js
+app.get("/properties", routes.getProperties); // done - PropertySearch.js
+app.get("/property_location", routes.getPropertyLocation); // done - PropertyCard.js
 app.get("/crime_per_capita/:zipcode", routes.getCrimePerCapitaByZipcode); // done - PropertySearch.js
 app.get("/crimes_in_zip/:zipcode", routes.getCrimesInZip); // done - CrimeMap.js
 app.get("/police_stations/:zipcode", routes.getPoliceStationsInZip); // done - CrimeMap.js
@@ -19,7 +19,7 @@ app.get("/street_patterns", routes.getStreetPatterns); // done - Insights.js
 app.get("/safe_high_value_properties", routes.getSafeProperties); // done - Insights.js
 app.get("/street_info", routes.getStreetInfo); // done - Insights.js
 app.post("/crime_near_address", routes.getCrimesNearAddress); // done - CrimeMap.js
-app.get("/property_location", routes.getPropertyLocation); // done - PropertyCard.js
+
 
 app.listen(config.server_port, () => {
   console.log(
