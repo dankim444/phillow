@@ -254,7 +254,7 @@ const getAverageHousePriceByZip = async (req, res) => {
 /** Complex queries **/
 
 // [USED] [USED] [USED]
-// Route 8: GET /zipcode_info
+// Route 7: GET /zipcode_info
 // Description: Gets the average market value, property count, population, total crimes, police stations, and crime rate per capita for each zip code
 
 // POST-Optimization: ~1 s
@@ -302,7 +302,7 @@ const getZipCodeInfo = async (req, res) => {
 };
 
 // [USED] [USED] [USED]
-// Route 9: GET /street_patterns
+// Route 8: GET /street_patterns
 /* 
 Description: This query analyzes both property and crime patterns on individual streets by extracting street names from property addresses and crime location blocks.
 It aggregates the data to calculate metrics like average propety value, crime types, and crime freqeuncy. 
@@ -369,7 +369,7 @@ const getStreetPatterns = async (req, res) => {
   );
 };
 
-// Route 10: GET /safe_high_value_properties
+// Route 9: GET /safe_high_value_properties
 /*
 Description: This route allows a user to provide a minimum market value and a specific crime type
 they want to avoid. It returns a list of properties where all properties have a market value above the
@@ -419,192 +419,8 @@ const getSafeProperties = async (req, res) => {
   );
 };
 
-// Route 11: GET /investment_scores
-/*
-Description: This complex query analyzes property sales trends, safety, and market dynamics across zip codes to calculate an investment score
-for each area, considering factors like price trends, new construction, crime rate, and police station presence. It ranks the zip codes by
-investment potential, helping identify the most promising areas for real estate investment.
-*/
-
-// duration: 2 s
-const getInvestmentScores = async (req, res) => {
-  connection.query(
-    `
-    WITH PropertyValueTrends AS (
-        SELECT
-            p.zip_code,
-            p.category_code_description,
-            EXTRACT(YEAR FROM p.sale_date) as sale_year,
-            COUNT(*) as total_sales,
-            AVG(p.sale_price) as avg_sale_price,
-            AVG(p.market_value) as avg_market_value,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY p.sale_price) as median_sale_price,
-            AVG(p.total_livable_area) as avg_size,
-            COUNT(*) FILTER (WHERE p.year_built >= EXTRACT(YEAR FROM CURRENT_DATE) - 10) as new_construction
-        FROM properties p
-        WHERE p.sale_date >= CURRENT_DATE - INTERVAL '5 years'
-          AND p.sale_price > 0
-        GROUP BY p.zip_code, p.category_code_description, EXTRACT(YEAR FROM p.sale_date)
-    ),
-    ZipSafety AS (
-        SELECT
-            p.zip_code,
-            COUNT(DISTINCT ps.object_id) as police_stations,
-            COUNT(DISTINCT c.object_id) as annual_crimes,
-            zp.population
-        FROM properties p
-        LEFT JOIN police_stations ps ON p.zip_code = ps.zip_code
-        LEFT JOIN crime_data c ON
-            SUBSTRING(p.location FROM '^[0-9]+ (.+)$') =
-            SUBSTRING(c.location_block FROM '^[0-9]+ BLOCK (.+)$')
-            AND c.dispatch_date >= CURRENT_DATE - INTERVAL '1 year'
-        JOIN zipcode_population zp ON p.zip_code = zp.zip_code
-        GROUP BY p.zip_code, zp.population
-    ),
-    MarketDynamics AS (
-        SELECT
-            pvt.zip_code,
-            pvt.category_code_description,
-            MAX(pvt.avg_sale_price) - MIN(pvt.avg_sale_price) as price_range,
-            AVG(pvt.avg_sale_price) as overall_avg_price,
-            SUM(pvt.new_construction) as total_new_construction,
-            COUNT(DISTINCT pvt.sale_year) as years_of_data,
-            CORR(pvt.sale_year::numeric, pvt.avg_sale_price::numeric) as price_trend_correlation
-        FROM PropertyValueTrends pvt
-        GROUP BY pvt.zip_code, pvt.category_code_description
-        HAVING COUNT(DISTINCT pvt.sale_year) >= 3
-    )
-    SELECT
-        md.zip_code,
-        md.category_code_description,
-        ROUND(md.overall_avg_price::numeric, 2) as avg_price,
-        ROUND(md.price_range::numeric, 2) as price_volatility,
-        ROUND(md.price_trend_correlation::numeric, 3) as price_trend,
-        md.total_new_construction,
-        zs.police_stations,
-        ROUND((zs.annual_crimes::numeric / NULLIF(zs.population, 0) * 1000)::numeric, 2) as crime_rate_per_1000,
-        ROUND(
-            (
-                CASE
-                    WHEN md.price_trend_correlation > 0.7 THEN 30
-                    WHEN md.price_trend_correlation > 0.3 THEN 20
-                    ELSE 10
-                END +
-                CASE
-                    WHEN md.total_new_construction > 10 THEN 20
-                    WHEN md.total_new_construction > 5 THEN 10
-                    ELSE 0
-                END +
-                CASE
-                    WHEN (zs.annual_crimes::numeric / NULLIF(zs.population, 0) * 1000) < 50 THEN 30
-                    WHEN (zs.annual_crimes::numeric / NULLIF(zs.population, 0) * 1000) < 100 THEN 15
-                    ELSE 0
-                END +
-                CASE
-                    WHEN zs.police_stations > 0 THEN 20
-                    ELSE 0
-                END
-            )::numeric,
-        2) as investment_score
-    FROM MarketDynamics md
-    JOIN ZipSafety zs ON md.zip_code = zs.zip_code
-    WHERE md.overall_avg_price > 0
-    ORDER BY investment_score DESC;
-    `,
-    (err, data) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json([]);
-      } else {
-        res.json(data.rows);
-      }
-    }
-  );
-};
-
-// Route 12: GET /street_safety_scores
-/*
-Description: This query calculates a "safety score" for each street by combining property values, crime statistics, and police presence,
-where the score is weighted based on how the street's property values compare to the zip code average (30%), crime frequency (40%), and
-presence of police stations (30%), while filtering out streets with fewer than 5 properties.
-*/
-
-// duration: 54 s
-const getStreetSafetyScores = async (req, res) => {
-  connection.query(
-    `
-    WITH CrimeByStreet AS (
-        SELECT
-            SUBSTRING(location_block FROM '^[0-9]+ BLOCK (.+)$') as street_name,
-            COUNT(*) as crime_count,
-            COUNT(DISTINCT DATE_TRUNC('month', dispatch_date)) as months_with_crimes,
-            AVG(EXTRACT(HOUR FROM dispatch_time)) as avg_crime_hour
-        FROM crime_data
-        WHERE dispatch_date >= CURRENT_DATE - INTERVAL '1 year'
-        GROUP BY SUBSTRING(location_block FROM '^[0-9]+ BLOCK (.+)$')
-    ),
-    PropertyStats AS (
-        SELECT
-            p.zip_code,
-            SUBSTRING(p.location FROM '^[0-9]+ (.+)$') as street_name,
-            COUNT(*) as property_count,
-            AVG(p.market_value) as avg_property_value,
-            AVG(p.total_livable_area) as avg_livable_area,
-            COUNT(DISTINCT p.category_code_description) as property_type_diversity
-        FROM properties p
-        GROUP BY p.zip_code, SUBSTRING(p.location FROM '^[0-9]+ (.+)$')
-    ),
-    ZipSafety AS (
-        SELECT
-            ps.zip_code,
-            COUNT(DISTINCT police.object_id) as police_station_count,
-            AVG(p.market_value) as zip_avg_value,
-            zp.population,
-            COUNT(DISTINCT ps.street_name) as total_streets
-        FROM PropertyStats ps
-        JOIN zipcode_population zp ON ps.zip_code = zp.zip_code
-        LEFT JOIN police_stations police ON ps.zip_code = police.zip_code
-        JOIN properties p ON ps.zip_code = p.zip_code
-        GROUP BY ps.zip_code, zp.population
-    )
-    SELECT
-        ps.zip_code,
-        ps.street_name,
-        ROUND(ps.avg_property_value, 2) as avg_property_value,
-        ps.property_count,
-        cs.crime_count,
-        cs.months_with_crimes,
-        ROUND(cs.avg_crime_hour, 1) as avg_crime_hour,
-        zs.police_station_count,
-        ROUND(
-            (
-                (COALESCE(ps.avg_property_value, 0) / NULLIF(zs.zip_avg_value, 0) * 0.3) +
-                (CASE WHEN cs.crime_count IS NULL THEN 1
-                      WHEN cs.crime_count < 10 THEN 0.8
-                      WHEN cs.crime_count < 50 THEN 0.5
-                      ELSE 0.2 END * 0.4) +
-                (CASE WHEN zs.police_station_count > 0 THEN 0.3 ELSE 0 END)
-            ) * 100,
-        2) as safety_score
-    FROM PropertyStats ps
-    LEFT JOIN CrimeByStreet cs ON ps.street_name = cs.street_name
-    JOIN ZipSafety zs ON ps.zip_code = zs.zip_code
-    WHERE ps.property_count >= 5  -- Filter for streets with meaningful data
-    ORDER BY safety_score DESC;
-    `,
-    (err, data) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json([]);
-      } else {
-        res.json(data.rows);
-      }
-    }
-  );
-};
-
 // [USED] [USED] [USED]
-// NEW Route: GET /street_info
+// Route 10: GET /street_info
 /* [Kevin]
 Description: Gets info on every street (# of crimes on that street, # of properties, types of crimes committed broken down)
 average market value, etc
@@ -793,8 +609,6 @@ module.exports = {
   getZipCodeInfo,
   getStreetPatterns,
   getSafeProperties,
-  getInvestmentScores,
-  getStreetSafetyScores,
   getStreetInfo,
   getCrimesNearAddress,
   getPropertyLocation,
