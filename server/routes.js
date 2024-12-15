@@ -98,7 +98,7 @@ const getProperties = async (req, res) => {
 // Route 2: GET /property_location
 const getPropertyLocation = (req, res) => {
   const address = req.query.address;
-  const geocoderScript = path.resolve(__dirname, "../scripts", "geocoder.py");
+  const geocoderScript = path.resolve(__dirname, "./scripts", "geocoder.py");
   exec(`python3 ${geocoderScript} "${address}"`, (error, stdout, stderr) => {
     if (error) {
       console.error(`Error executing script: ${stderr}`);
@@ -443,7 +443,7 @@ const getCrimesNearAddress = async (req, res) => {
   }
 
   // Adjust the path to `geocoder.py` based on its actual location
-  const geocoderScript = path.resolve(__dirname, "../scripts", "geocoder.py");
+  const geocoderScript = path.resolve(__dirname, "./scripts", "geocoder.py");
 
   try {
     exec(`python3 ${geocoderScript} "${address}"`, (error, stdout, stderr) => {
