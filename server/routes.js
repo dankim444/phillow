@@ -376,7 +376,7 @@ they want to avoid. It returns a list of properties where all properties have a 
 specified threshold and there are no reported crimes of the specified type.
 */
 
-// duration: 
+// duration:
 const getSafeProperties = async (req, res) => {
   const { min_market_value, crime_type } = req.query;
 
@@ -405,7 +405,8 @@ const getSafeProperties = async (req, res) => {
                 c.zip_code = p.zip_code 
                 AND c.text_general_code = $2
         )
-    ORDER BY p.market_value DESC;
+    ORDER BY p.market_value
+    LIMIT 100;
     `,
     [min_market_value, crime_type],
     (err, data) => {

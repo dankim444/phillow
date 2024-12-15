@@ -22,19 +22,25 @@ const SafeHighValueProperties = () => {
 
   const fetchData = () => {
     setLoading(true);
+    setSubmitted(true);
     fetch(
       `http://localhost:8080/safe_high_value_properties?min_market_value=${minMarketValue}&crime_type=${crimeType}`
     )
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then((data) => {
+        console.log("Fetched data:", data); // Debugging log
         setData(data);
         setLoading(false);
-        setSubmitted(true);
       })
       .catch((error) => {
+        console.error("Error fetching data:", error); // Debugging log
         setError(error);
         setLoading(false);
-        setSubmitted(true);
       });
   };
 
@@ -155,19 +161,19 @@ const SafeHighValueProperties = () => {
                   ...row,
                 }))}
                 columns={[
-                  { field: "address", headerName: "Address", width: 200 },
-                  { field: "zip_code", headerName: "Zip Code", width: 130 },
+                  { field: "location", headerName: "Location", width: 200 },
                   {
                     field: "market_value",
                     headerName: "Market Value",
                     width: 150,
                   },
+                  { field: "zip_code", headerName: "Zip Code", width: 130 },
+                  { field: "population", headerName: "Population", width: 150 },
                   {
-                    field: "total_livable_area",
-                    headerName: "Total Livable Area",
-                    width: 150,
+                    field: "total_crimes_in_zip",
+                    headerName: "Total Crimes in Zip",
+                    width: 200,
                   },
-                  { field: "year_built", headerName: "Year Built", width: 130 },
                 ]}
                 pageSize={10}
                 autoHeight
@@ -179,7 +185,7 @@ const SafeHighValueProperties = () => {
                 width={600}
                 height={300}
                 data={data.map((row) => ({
-                  name: row.address,
+                  name: row.location,
                   marketValue: row.market_value,
                 }))}
                 margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
