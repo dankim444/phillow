@@ -81,17 +81,21 @@ export default function Insights() {
               Zip Code Avg Market Value Distribution
             </Typography>
             <BarChart
-              width={600}
+              width={1400}
               height={300}
               data={data.map((row) => ({
                 name: row.zip_code,
                 avgMarketValue: row.avg_market_value,
               }))}
-              margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
+              <XAxis dataKey="name" 
+                      interval={0} // Show every zipcode
+                      angle={-45} // Rotate tick labels for better readability
+                      textAnchor="end" // Align text with ticks
+              />
+              <YAxis domain={[0, 1000000]}/>
               <Tooltip />
               <Bar dataKey="avgMarketValue" fill="#82ca9d" />
             </BarChart>
@@ -160,24 +164,6 @@ export default function Insights() {
               pageSize={10}
               autoHeight
             />
-            <Typography variant="h6" sx={{ marginTop: "20px" }}>
-              Crime Type Distribution (Sample)
-            </Typography>
-            <BarChart
-              width={600}
-              height={300}
-              data={data.map((row) => ({
-                name: row.street_name,
-                ...row.crime_type_distribution, // Assumes crime_type_distribution is a flat JSON
-              }))}
-              margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="total_crimes_2018" fill="#0074e4" />
-            </BarChart>
           </>
         );
 

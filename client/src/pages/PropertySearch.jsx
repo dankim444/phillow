@@ -4,9 +4,6 @@ import {
   Button,
   Grid,
   Typography,
-  Card,
-  CardContent,
-  CardMedia,
   Box,
   Pagination,
   Slider,
@@ -15,6 +12,7 @@ import {
   InputLabel,
   FormControl,
 } from "@mui/material";
+import PropertyCard from "../components/PropertyCard";
 
 export default function PropertySearch() {
   const [zipcode, setZipcode] = useState(""); // Selected zip code
@@ -69,15 +67,23 @@ export default function PropertySearch() {
 
   const handleSearchByZip = async () => {
     try {
-      const propertiesParams = new URLSearchParams({
-        zipcode,
-        ...filters,
-      });
+      const propertiesURL = new URL("http://localhost:8080/properties_in_zip");
+      propertiesURL.searchParams.append("zipcode", zipcode);
 
-      // Fetch properties by zip code
-      const propertiesResponse = await fetch(
-        `http://localhost:8080/properties_in_zip?${propertiesParams.toString()}`
-      );
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            propertiesURL.searchParams.append(key, value);
+          }
+        });
+      }
+
+      if (address) {
+        propertiesURL.searchParams.append("address", address);
+      }
+
+      // Fetch properties by zip code and optionally by filters and address
+      const propertiesResponse = await fetch(propertiesURL);
       if (!propertiesResponse.ok) {
         throw new Error(`HTTP error! status: ${propertiesResponse.status}`);
       }
@@ -163,26 +169,25 @@ export default function PropertySearch() {
     }
   };
 
-  const getPropertyImage = (propertyType) => {
-    const type = propertyType?.toLowerCase();
+  // Handle Pagination
+  const startIndex = (currentPage - 1) * propertiesPerPage;
+  const endIndex = startIndex + propertiesPerPage;
+  const currentProperties = properties.slice(startIndex, endIndex);
+  const currentAddresses =
+    addressSearchResults.length > 0
+      ? addressSearchResults.slice(startIndex, endIndex)
+      : currentProperties;
 
-    const imageMap = {
-      "multi family": "/images/multi-family.jpg",
-      "single family": "/images/single-family.jpg",
-      "garage - residential": "/images/garage-residential.jpg",
-      "mixed use": "/images/mixed-use.jpg",
-      "apartments  > 4 units": "/images/large-apartment.jpg",
-      "vacant land - residential": "/images/vacant-residential.jpg",
-      commercial: "/images/commercial.jpg",
-      "special purpose": "/images/special-purpose.jpg",
-      industrial: "/images/industrial.jpg",
-      "garage - commercial": "/images/garage-commercial.jpg",
-      "vacant land": "/images/vacant-land.jpg",
-      offices: "/images/offices.jpg",
-      retail: "/images/retail.jpg",
-    };
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
 
-    return imageMap[type] || "/images/default-property.jpg";
+  // Handle Filter Changes
+  const handleFilterChange = (filterName, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterName]: value,
+    }));
   };
 
   return (
@@ -386,34 +391,9 @@ export default function PropertySearch() {
 
       {/* Display properties */}
       <Grid container spacing={3}>
-        {currentResults.map((property, index) => (
+        {currentAddresses.map((property, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
-            <Card sx={{ maxWidth: 345 }}>
-              <CardMedia
-                component="img"
-                height="180"
-                image={getPropertyImage(property.category_code_description)}
-                alt={`${property.category_code_description} property`}
-              />
-              <CardContent>
-                <Typography variant="h6">{property.location}</Typography>
-                <Typography>
-                  <strong>Market Value:</strong> ${property.market_value}
-                </Typography>
-                <Typography>
-                  <strong>Sale Price:</strong> ${property.sale_price}
-                </Typography>
-                <Typography>
-                  <strong>Bedrooms:</strong> {property.number_of_bedrooms}
-                </Typography>
-                <Typography>
-                  <strong>Bathrooms:</strong> {property.number_of_bathrooms}
-                </Typography>
-                <Typography>
-                      <strong>Year Built:</strong> {property.year_built}
-                    </Typography>
-              </CardContent>
-            </Card>
+            <PropertyCard property={property} />
           </Grid>
         ))}
       </Grid>
