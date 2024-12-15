@@ -150,7 +150,7 @@ const SafeHighValueProperties = () => {
           )}
           {!loading && !error && data.length === 0 && (
             <Typography>
-              No data available. Please try a different option.
+              There are no properties without the crime {crimeType}.
             </Typography>
           )}
           {!loading && !error && data.length > 0 && (
@@ -178,24 +178,6 @@ const SafeHighValueProperties = () => {
                 pageSize={10}
                 autoHeight
               />
-              <Typography variant="h6" sx={{ marginTop: "20px" }}>
-                Property Market Value Distribution
-              </Typography>
-              <BarChart
-                width={600}
-                height={300}
-                data={data.map((row) => ({
-                  name: row.location,
-                  marketValue: row.market_value,
-                }))}
-                margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis domain={[0, 1000000]} />
-                <Tooltip />
-                <Bar dataKey="marketValue" fill="#82ca9d" />
-              </BarChart>
             </>
           )}
         </>

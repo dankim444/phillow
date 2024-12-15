@@ -256,8 +256,6 @@ const getAverageHousePriceByZip = async (req, res) => {
 // [USED] [USED] [USED]
 // Route 7: GET /zipcode_info
 // Description: Gets the average market value, property count, population, total crimes, police stations, and crime rate per capita for each zip code
-
-// POST-Optimization: ~1 s
 const getZipCodeInfo = async (req, res) => {
   connection.query(
     `
@@ -307,9 +305,6 @@ const getZipCodeInfo = async (req, res) => {
 Description: This query analyzes both property and crime patterns on individual streets by extracting street names from property addresses and crime location blocks.
 It aggregates the data to calculate metrics like average propety value, crime types, and crime freqeuncy. 
 */
-// UI - Help users identify streets with high property values or high crime activity.
-
-// duration: 6 s
 const getStreetPatterns = async (req, res) => {
   connection.query(
     `
