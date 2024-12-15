@@ -41,5 +41,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^27.5.1",
+    "supertest": "^7.0.0"
   }
 }
