@@ -409,6 +409,9 @@ export default function PropertySearch() {
                 <Typography>
                   <strong>Bathrooms:</strong> {property.number_of_bathrooms}
                 </Typography>
+                <Typography>
+                      <strong>Year Built:</strong> {property.year_built}
+                    </Typography>
               </CardContent>
             </Card>
           </Grid>

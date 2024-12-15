@@ -6,6 +6,13 @@ import {
   Typography,
   Tabs,
   Tab,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer,
+  Paper,
 } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -234,6 +241,51 @@ export default function CrimeMap() {
           {error}
         </Typography>
       )}
+
+      {/* Comparison Table */}
+      {dataByAddress.length > 0 && (
+        <TableContainer component={Paper} sx={{ marginTop: "20px" }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Address</strong></TableCell>
+                <TableCell><strong>Total Crimes</strong></TableCell>
+                <TableCell><strong>Top 3 Crime Types</strong></TableCell>
+                <TableCell><strong>Police Stations Nearby</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {dataByAddress.map((entry, index) => {
+                // Calculate top 3 crime types
+                const crimeCounts = entry.crimes.reduce((acc, crime) => {
+                  acc[crime.text_general_code] = (acc[crime.text_general_code] || 0) + 1;
+                  return acc;
+                }, {});
+
+                const topCrimes = Object.entries(crimeCounts)
+                  .sort((a, b) => b[1] - a[1]) // Sort by count descending
+                  .slice(0, 3); // Get top 3 crimes
+
+                return (
+                  <TableRow key={`row-${index}`}>
+                    <TableCell>{entry.address}</TableCell>
+                    <TableCell>{entry.crimes.length}</TableCell>
+                    <TableCell>
+                      {topCrimes.map(([crimeType, count]) => (
+                        <div key={crimeType}>
+                          {crimeType}: {count}
+                        </div>
+                      ))}
+                    </TableCell>
+                    <TableCell>{entry.stations.length}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
 
       {/* Map Display */}
       <MapContainer
