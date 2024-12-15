@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 const SafeHighValueProperties = () => {
   const [data, setData] = useState([]);
@@ -59,13 +59,17 @@ const SafeHighValueProperties = () => {
 
   return (
     <Box sx={{ padding: "20px" }}>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" sx={{ marginBottom: "50px" }} gutterBottom>
         Safe High Value Properties
       </Typography>
       <Box sx={{ marginBottom: "20px" }}>
         <FormControl sx={{ marginRight: "20px", minWidth: 200 }}>
           <InputLabel>Crime Type</InputLabel>
-          <Select value={crimeType} onChange={handleCrimeTypeChange}>
+          <Select
+            value={crimeType}
+            onChange={handleCrimeTypeChange}
+            sx={{ marginTop: "20px" }} // Add margin to create space
+          >
             <MenuItem value="Vagrancy/Loitering">Vagrancy/Loitering</MenuItem>
             <MenuItem value="Forgery and Counterfeiting">
               Forgery and Counterfeiting
