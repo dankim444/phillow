@@ -305,53 +305,55 @@ const getZipCodeInfo = async (req, res) => {
 Description: This query analyzes both property and crime patterns on individual streets by extracting street names from property addresses and crime location blocks.
 It aggregates the data to calculate metrics like average propety value, crime types, and crime freqeuncy. 
 */
+// UI - Help users identify streets with high property values or high crime activity.
+
+// duration: 5 s
+// after indexing: 1 s
 const getStreetPatterns = async (req, res) => {
   connection.query(
     `
-    WITH unique_streets AS (
-        SELECT DISTINCT
-            TRIM(REGEXP_REPLACE(location, '^[^ ]+ ', '')) AS street_name
-        FROM properties
-    ),
-    street_properties AS (
-        SELECT
-            us.street_name,
-            COUNT(DISTINCT p.object_id) AS num_properties,
-            COUNT(DISTINCT p.category_code_description) AS property_types,
-            MAX(p.year_built) AS newest_property,
-            MIN(p.year_built) AS oldest_property
-        FROM unique_streets us
-        JOIN properties p ON TRIM(REGEXP_REPLACE(p.location, '^[^ ]+ ', '')) = us.street_name
-        GROUP BY us.street_name
-    ),
-    street_crimes AS (
-        SELECT
-            us.street_name,
-            COUNT(DISTINCT c.object_id) AS num_crimes,
-            COUNT(DISTINCT c.text_general_code) AS crime_types,
-            ROUND(AVG(c.hour), 1) AS avg_crime_hour,
-            COUNT(DISTINCT DATE_TRUNC('month', c.dispatch_date)) AS months_with_crimes
-        FROM unique_streets us
-        JOIN crime_data c ON
-            TRIM(REGEXP_REPLACE(REGEXP_REPLACE(c.location_block, 'BLOCK ', ''), '^[^ ]+ ', '')) = us.street_name
-        GROUP BY us.street_name
-    )
+WITH unique_streets AS (
+    SELECT DISTINCT street_name
+    FROM properties
+),
+street_properties AS (
     SELECT
-        sp.street_name,
-        sp.num_properties,
-        sp.property_types,
-        sp.newest_property,
-        sp.oldest_property,
-        sc.num_crimes,
-        sc.crime_types,
-        sc.avg_crime_hour,
-        sc.months_with_crimes,
-        ROUND(sc.num_crimes::DECIMAL / sc.months_with_crimes, 2) AS crimes_per_month,
-        ROUND(sc.num_crimes::DECIMAL / sp.num_properties, 2) AS crimes_per_property
-    FROM street_properties sp
-    JOIN street_crimes sc ON sp.street_name = sc.street_name
-    WHERE sp.num_properties >= 5
-    ORDER BY sc.num_crimes DESC;
+        us.street_name,
+        COUNT(DISTINCT p.object_id) AS num_properties,
+        COUNT(DISTINCT p.category_code_description) AS property_types,
+        MAX(p.year_built) AS newest_property,
+        MIN(p.year_built) AS oldest_property
+    FROM unique_streets us
+    JOIN properties p ON p.street_name = us.street_name
+    GROUP BY us.street_name
+),
+street_crimes AS (
+    SELECT
+        us.street_name,
+        COUNT(DISTINCT c.object_id) AS num_crimes,
+        COUNT(DISTINCT c.text_general_code) AS crime_types,
+        ROUND(AVG(c.hour), 1) AS avg_crime_hour,
+        COUNT(DISTINCT DATE_TRUNC('month', c.dispatch_date)) AS months_with_crimes
+    FROM unique_streets us
+    JOIN crime_data c ON c.street_name = us.street_name
+    GROUP BY us.street_name
+)
+SELECT
+    sp.street_name,
+    sp.num_properties,
+    sp.property_types,
+    sp.newest_property,
+    sp.oldest_property,
+    sc.num_crimes,
+    sc.crime_types,
+    sc.avg_crime_hour,
+    sc.months_with_crimes,
+    ROUND(sc.num_crimes::DECIMAL / sc.months_with_crimes, 2) AS crimes_per_month,
+    ROUND(sc.num_crimes::DECIMAL / sp.num_properties, 2) AS crimes_per_property
+FROM street_properties sp
+JOIN street_crimes sc ON sp.street_name = sc.street_name
+WHERE sp.num_properties >= 5
+ORDER BY sc.num_crimes DESC;
     `,
     (err, data) => {
       if (err) {
@@ -425,11 +427,11 @@ const getSafeProperties = async (req, res) => {
 // Route 10: GET /street_info
 /* [Kevin]
 Description: Gets info on every street (# of crimes on that street, # of properties, types of crimes committed broken down)
-average market value, etc
 */
 
 //26 seconds PRE-Optimization
 // 0.5 seconds POST-Optimization (caching)
+
 const getStreetInfo = async (req, res) => {
   connection.query(
     `
