@@ -1,7 +1,6 @@
 const { Pool, types } = require("pg");
 const config = require("./config.json");
-const { exec } = require("child_process");
-const path = require("path");
+const fetch = require("node-fetch");
 
 // Override the default parsing for BIGINT (PostgreSQL type ID 20)
 types.setTypeParser(20, (val) => parseInt(val, 10)); // DO NOT DELETE THIS
@@ -96,33 +95,42 @@ const getProperties = async (req, res) => {
 
 // [USED] [USED] [USED]
 // Route 2: GET /property_location
-const getPropertyLocation = (req, res) => {
+const getPropertyLocation = async (req, res) => {
   const address = req.query.address;
-  const geocoderScript = path.resolve(__dirname, "scripts/geocoder.py");
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+    address
+  )}&format=json&addressdetails=1&limit=1`;
+  const headers = {
+    "User-Agent": "Phillow/1.0 (xiaoshenma2016@gmail.com)",
+  };
 
-  // Use the Python binary from the virtual environment
-  const pythonPath = path.resolve(__dirname, "venv/bin/python");
-
-  exec(
-    `${pythonPath} ${geocoderScript} "${address}"`,
-    (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error executing geocoder.py:`, error);
-        console.error(`Standard Error Output:`, stderr);
-        return res
-          .status(500)
-          .send({ error: "Geocoding script execution failed" });
+  try {
+    console.log(`Requesting geocode data for address: ${address}`);
+    const response = await fetch(url, { headers });
+    console.log(`Response status: ${response.status}`);
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Check if we have results
+      if (data.length > 0) {
+        // Extract only the fields we want
+        const locationData = {
+          lon: data[0].lon,
+          lat: data[0].lat,
+          display_name: data[0].display_name
+        };
+        res.json(locationData);
+      } else {
+        res.status(404).json({ error: "Location not found" });
       }
-
-      try {
-        const data = JSON.parse(stdout);
-        res.send(data);
-      } catch (parseError) {
-        console.error(`JSON parsing error:`, parseError);
-        return res.status(500).send({ error: "Error parsing JSON response" });
-      }
+    } else {
+      console.error(`Error fetching geocode data: ${response.statusText}`);
+      res.status(response.status).json({ error: response.statusText });
     }
-  );
+  } catch (error) {
+    console.error(`Error fetching geocode data: ${error}`);
+    res.status(500).json({ error: error.message });
+  }
 };
 
 // [USED] [USED] [USED]
@@ -450,124 +458,107 @@ const getCrimesNearAddress = async (req, res) => {
     return res.status(400).json({ error: "Address and radius are required" });
   }
 
-  // Adjust the path to `geocoder.py` based on its actual location
-  const geocoderScript = path.resolve(__dirname, "./scripts/geocoder.py");
-  const pythonPath = path.resolve(__dirname, "./venv/bin/python");
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+    address
+  )}&format=json&addressdetails=1&limit=1`;
+  const headers = {
+    "User-Agent": "Phillow/1.0 (xiaoshenma2016@gmail.com)",
+  };
 
   try {
-    exec(
-      `${pythonPath} ${geocoderScript} "${address}"`,
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error("Geocoder error:", error.message);
-          console.error("Error stack:", error.stack);
-          return res.status(500).json({ error: "Geocoding failed" });
-        }
+    const response = await fetch(url, { headers });
+    if (!response.ok) {
+      console.error(`Error fetching geocode data: ${response.statusText}`);
+      return res.status(response.status).json({ error: "Geocoding failed" });
+    }
 
-        if (stderr) {
-          console.error("Geocoder stderr:", stderr);
-          return res.status(500).json({ error: "Geocoding error" });
-        }
+    const data = await response.json();
+    if (data.length === 0) {
+      return res.status(404).json({ error: "Address not found" });
+    }
 
-        console.log("Geocoder output:", stdout);
+    const { lat: latitude, lon: longitude } = data[0];
 
-        try {
-          const geocodeResult = JSON.parse(stdout);
-
-          if (geocodeResult.error) {
-            return res.status(404).json({ error: "Address not found" });
-          }
-
-          const { latitude, longitude } = geocodeResult;
-
-          // Query the database for crimes and police stations
-          connection.query(
-            `
-          WITH crime_distances AS (
-              SELECT
-                  text_general_code AS crime_type,
-                  COUNT(*) AS crime_count,  -- Add this to count crimes
-                  MIN(dispatch_date) AS earliest_date, -- Optional: earliest crime date
-                  MIN(dispatch_time) AS earliest_time, -- Optional: earliest time
-                  zip_code,
-                  lat,
-                  lng,
-                  (
-                      6371 * ACOS(
-                          COS(RADIANS($1)) * COS(RADIANS(lat)) *
-                          COS(RADIANS(lng) - RADIANS($2)) +
-                          SIN(RADIANS($1)) * SIN(RADIANS(lat))
-                      )
-                  ) AS distance_km
-              FROM crime_data
-              GROUP BY text_general_code, zip_code, lat, lng
-          )
+    // Query the database for crimes and police stations
+    connection.query(
+      `
+      WITH crime_distances AS (
           SELECT
-              crime_type as text_general_code,
-              crime_count,  -- Include the count of crimes
+              text_general_code AS crime_type,
+              COUNT(*) AS crime_count,  -- Add this to count crimes
+              MIN(dispatch_date) AS earliest_date, -- Optional: earliest crime date
+              MIN(dispatch_time) AS earliest_time, -- Optional: earliest time
               zip_code,
               lat,
               lng,
-              distance_km
-          FROM
-              crime_distances
-          WHERE
-              distance_km <= $3
-          ORDER BY
-              distance_km ASC;
-          `,
-            [latitude, longitude, radius],
-            (err, crimeData) => {
-              if (err) {
-                console.error("Database error:", err.message);
-                return res.status(500).json({ error: "Database query failed" });
-              }
-
-              connection.query(
-                `
-              WITH station_distances AS (
-                SELECT
-                  object_id,
-                  location,
-                  zip_code,
-                  lat,
-                  lng,
-                  (
-                    6371 * ACOS(
+              (
+                  6371 * ACOS(
                       COS(RADIANS($1)) * COS(RADIANS(lat)) *
                       COS(RADIANS(lng) - RADIANS($2)) +
                       SIN(RADIANS($1)) * SIN(RADIANS(lat))
-                    )
-                  ) AS distance_km
-                FROM police_stations
-              )
-              SELECT * FROM station_distances WHERE distance_km <= $3 ORDER BY distance_km ASC;
-              `,
-                [latitude, longitude, radius],
-                (err2, stationData) => {
-                  if (err2) {
-                    console.error("Database error:", err2.message);
-                    return res
-                      .status(500)
-                      .json({ error: "Database query failed" });
-                  }
-
-                  res.json({
-                    crimes: crimeData.rows,
-                    stations: stationData.rows,
-                  });
-                }
-              );
-            }
-          );
-        } catch (parseError) {
-          console.error("Parse error:", parseError.message);
-          return res.status(500).json({ error: "Invalid geocoding output" });
+                  )
+              ) AS distance_km
+          FROM crime_data
+          GROUP BY text_general_code, zip_code, lat, lng
+      )
+      SELECT
+          crime_type as text_general_code,
+          crime_count,  -- Include the count of crimes
+          zip_code,
+          lat,
+          lng,
+          distance_km
+      FROM
+          crime_distances
+      WHERE
+          distance_km <= $3
+      ORDER BY
+          distance_km ASC;
+      `,
+      [latitude, longitude, radius],
+      (err, crimeData) => {
+        if (err) {
+          console.error("Database error:", err.message);
+          return res.status(500).json({ error: "Database query failed" });
         }
+
+        connection.query(
+          `
+          WITH station_distances AS (
+            SELECT
+              object_id,
+              location,
+              zip_code,
+              lat,
+              lng,
+              (
+                6371 * ACOS(
+                  COS(RADIANS($1)) * COS(RADIANS(lat)) *
+                  COS(RADIANS(lng) - RADIANS($2)) +
+                  SIN(RADIANS($1)) * SIN(RADIANS(lat))
+                )
+              ) AS distance_km
+            FROM police_stations
+          )
+          SELECT * FROM station_distances WHERE distance_km <= $3 ORDER BY distance_km ASC;
+          `,
+          [latitude, longitude, radius],
+          (err2, stationData) => {
+            if (err2) {
+              console.error("Database error:", err2.message);
+              return res.status(500).json({ error: "Database query failed" });
+            }
+
+            res.json({
+              crimes: crimeData.rows,
+              stations: stationData.rows,
+            });
+          }
+        );
       }
     );
-  } catch (err) {
-    console.error("Unexpected error:", err.message);
+  } catch (error) {
+    console.error("Error fetching geocode data:", error.message);
     return res.status(500).json({ error: "An unexpected error occurred" });
   }
 };
