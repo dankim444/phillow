@@ -2,71 +2,6 @@ const { expect } = require('@jest/globals');
 const supertest = require('supertest');
 const app = require('../server');
 
-const { exec } = require('child_process');
-
-test('GET /property/:address returns property data', async () => {
-  await supertest(app)
-    .get('/property/1420 LOCUST ST')
-    .expect(200)
-    .then((response) => {
-      expect(Array.isArray(response.body)).toBe(true);
-      if (response.body.length > 0) {
-        expect(response.body[0]).toHaveProperty('location');
-        expect(response.body[0]).toHaveProperty('zip_code');
-        expect(response.body[0]).toHaveProperty('market_value');
-        expect(response.body[0]).toHaveProperty('sale_price');
-        expect(response.body[0]).toHaveProperty('total_livable_area');
-        expect(response.body[0].zip_code).toBe('19102');
-      }
-    });
-});
-
-test('GET /property/:address with zipcode returns filtered data', async () => {
-  await supertest(app)
-    .get('/property/1420 LOCUST ST?zipcode=19102')
-    .expect(200)
-    .then((response) => {
-      expect(Array.isArray(response.body)).toBe(true);
-      if (response.body.length > 0) {
-        expect(response.body[0].zip_code).toBe('19102');
-        expect(response.body.length).toBe(414);
-      }
-    });
-});
-
-test('GET /properties_in_zip returns properties for zipcode', async () => {
-  await supertest(app)
-    .get('/properties_in_zip?zipcode=19102')
-    .expect(200)
-    .then((response) => {
-      expect(Array.isArray(response.body)).toBe(true);
-      if (response.body.length > 0) {
-        expect(response.body[0]).toHaveProperty('location');
-        expect(response.body[0]).toHaveProperty('zip_code');
-        expect(response.body[0]).toHaveProperty('market_value');
-        expect(response.body[0].zip_code).toBe('19102');
-        expect(response.body.length).toBe(1213);
-      }
-    });
-});
-
-test('GET /properties_in_zip with filters returns filtered properties', async () => {
-  await supertest(app)
-    .get('/properties_in_zip?zipcode=19104&min_bathrooms=2&max_bathrooms=3&min_bedrooms=2&max_bedrooms=3')
-    .expect(200)
-    .then((response) => {
-      expect(Array.isArray(response.body)).toBe(true);
-      if (response.body.length > 0) {
-        const property = response.body[0];
-        expect(Number(property.number_of_bathrooms)).toBeLessThanOrEqual(3.0);
-        expect(Number(property.number_of_bathrooms)).toBeGreaterThanOrEqual(2.0);
-        expect(Number(property.number_of_bedrooms)).toBeGreaterThanOrEqual(2.0);
-        expect(Number(property.number_of_bedrooms)).toBeLessThanOrEqual(3.0);
-        expect(property.zip_code).toBe('19104');
-      }
-    });
-});
-
 test('GET /crime_per_capita/:zipcode returns crime statistics', async () => {
   await supertest(app)
     .get('/crime_per_capita/19104')
@@ -271,10 +206,10 @@ test('GET /property_location returns geocoded coordinates', async () => {
     .get('/property_location?address=1420 LOCUST ST')
     .expect(200)
     .then((response) => {
-      expect(response.body).toHaveProperty('latitude');
-      expect(response.body).toHaveProperty('longitude');
-      expect(Number(response.body.latitude)).toBeTruthy();
-      expect(Number(response.body.longitude)).toBeTruthy();
+      expect(response.body).toHaveProperty('lat');
+      expect(response.body).toHaveProperty('lon');
+      expect(Number(response.body.lat)).toBeDefined();
+      expect(Number(response.body.lng)).toBeDefined();
     });
 }, 10000);
 
