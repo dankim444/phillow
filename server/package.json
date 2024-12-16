@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon server.js",
     "test": "jest --coverage",
-    "postbuild": "python3 -m venv venv && ./venv/bin/pip install -r requirements.txt"
+    "postbuild": "python3 -m venv venv && . venv/bin/activate && && ./venv/bin/pip install -r requirements.txt"
   },
   "dependencies": {
     "cors": "^2.8.5",
