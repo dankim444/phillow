@@ -4,6 +4,12 @@
 
 This project is a web application designed to help users search for properties in Philadelphia while providing insights into crime data in the surrounding areas. The platform combines real estate data and crime statistics to offer advanced filtering, safety scores, and interactive visualizations to aid decision-making.
 
+## Instructions:
+- clone this repo
+- cd server, npm run start
+- cd client, npm run start
+
+
 ## Features
 
 - **Basic Property Search**:
