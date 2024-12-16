@@ -278,7 +278,7 @@ export default function CrimeMap() {
             sx={{ display: "flex", alignItems: "center", marginBottom: "20px" }}
           >
             <TextField
-              label="Enter Address (ie. 123 Main St)"
+              label="Enter Address (ie. 101 S 39th St)"
               variant="outlined"
               value={newAddress}
               onChange={(e) => setNewAddress(e.target.value)}

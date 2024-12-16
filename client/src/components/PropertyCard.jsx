@@ -8,12 +8,13 @@ import {
   Box,
   Button,
   Grid,
+  CircularProgress,
 } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 const createpropertyIcon = () =>
   L.divIcon({
@@ -48,6 +49,8 @@ const getPropertyImage = (propertyType) => {
 export default function PropertyCard({ property }) {
   const [openModal, setOpenModal] = useState(false);
   const [geocodeData, setGeocodeData] = useState(null);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOpenModal = () => {
     setOpenModal(true);
@@ -56,24 +59,58 @@ export default function PropertyCard({ property }) {
 
   const handleCloseModal = () => {
     setOpenModal(false);
+    setGeocodeData(null); // Reset geocode data when closing the modal
+    setError(null); // Reset error when closing the modal
   };
 
-  // Fetch latitude and longitude data for the property
+  // Fetch lat and lon data for the property
   const fetchGeocodeData = async (address, zipcode) => {
+    setIsLoading(true);
+    setError(null);
     const fullAddress = `${address}, Philadelphia, PA ${zipcode}`;
+
     try {
-      const response = await fetch(
-        `${API_URL}/property_location?address=${fullAddress}`
+      console.log(
+        "Attempting to fetch from:",
+        `${API_URL}/property_location?address=${encodeURIComponent(
+          fullAddress
+        )}`
       );
+      const response = await fetch(
+        `${API_URL}/property_location?address=${encodeURIComponent(
+          fullAddress
+        )}`
+      );
+
       if (response.ok) {
         const data = await response.json();
-        setGeocodeData(data);
-        console.log("Geocode data:", data);
+        console.log("Received geocode data:", data);
+
+        // Check if we have the required data
+        if (data && data.lon && data.lat) {
+          setGeocodeData({
+            lat: Number(data.lat),
+            lon: Number(data.lon),
+            display_name: data.display_name,
+          });
+          console.log("Set geocode data:", {
+            lat: Number(data.lat),
+            lon: Number(data.lon),
+            display_name: data.display_name,
+          });
+        } else {
+          console.error("Invalid or missing location data:", data);
+          setError("Invalid location data received");
+        }
       } else {
-        console.error("Error fetching geocode data:", response.statusText);
+        console.error("Response not ok:", response.status);
+        setError(`Failed to load location data: ${response.status}`);
       }
     } catch (error) {
-      console.error("Error fetching geocode data:", error);
+      console.error("Fetch error:", error);
+      setError(`Error loading location data: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -173,9 +210,21 @@ export default function PropertyCard({ property }) {
 
             {/* Right side: Map */}
             <Grid item xs={12} md={6}>
-              {geocodeData && (
+              {error && <Typography color="error">{error}</Typography>}
+              {isLoading ? (
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  height="400px"
+                  bgcolor="background.paper"
+                  borderRadius="8px"
+                >
+                  <CircularProgress />
+                </Box>
+              ) : geocodeData ? (
                 <MapContainer
-                  center={[geocodeData.latitude, geocodeData.longitude]}
+                  center={[geocodeData.lat, geocodeData.lon]}
                   zoom={15}
                   style={{
                     height: "400px",
@@ -188,7 +237,7 @@ export default function PropertyCard({ property }) {
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   />
                   <Marker
-                    position={[geocodeData.latitude, geocodeData.longitude]}
+                    position={[geocodeData.lat, geocodeData.lon]}
                     icon={createpropertyIcon()}
                   >
                     <Popup>
@@ -198,6 +247,19 @@ export default function PropertyCard({ property }) {
                     </Popup>
                   </Marker>
                 </MapContainer>
+              ) : (
+                !error && (
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    height="400px"
+                    bgcolor="background.paper"
+                    borderRadius="8px"
+                  >
+                    <Typography>No location data available</Typography>
+                  </Box>
+                )
               )}
             </Grid>
           </Grid>
