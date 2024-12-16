@@ -86,29 +86,21 @@ export default function PropertyCard({ property }) {
         const data = await response.json();
         console.log("Received geocode data:", data);
 
-        // Check if data is an array and has at least one element
-        if (Array.isArray(data) && data.length > 0) {
-          const location = data[0]; // Get the first result
-
-          if (!location.lat || !location.lon) {
-            console.error("Missing lat/lon in location data:", location);
-            setError("Invalid location data received");
-            return;
-          }
-
+        // Check if we have the required data
+        if (data && data.lon && data.lat) {
           setGeocodeData({
-            lat: Number(location.lat),
-            lon: Number(location.lon),
-            display_name: location.display_name,
+            lat: Number(data.lat),
+            lon: Number(data.lon),
+            display_name: data.display_name,
           });
           console.log("Set geocode data:", {
-            lat: Number(location.lat),
-            lon: Number(location.lon),
-            display_name: location.display_name,
+            lat: Number(data.lat),
+            lon: Number(data.lon),
+            display_name: data.display_name,
           });
         } else {
-          console.error("No location data in response:", data);
-          setError("No location data found");
+          console.error("Invalid or missing location data:", data);
+          setError("Invalid location data received");
         }
       } else {
         console.error("Response not ok:", response.status);
