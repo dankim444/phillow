@@ -24,13 +24,13 @@ export default function PropertySearch() {
   const [avgHousePrice, setAvgHousePrice] = useState(""); // Average house price
   const [filters, setFilters] = useState({
     min_bathrooms: 0,
-    max_bathrooms: 10,
+    max_bathrooms: 25,
     min_bedrooms: 0,
-    max_bedrooms: 10,
+    max_bedrooms: 45,
     min_livable_area: 0,
-    max_livable_area: 10000,
+    max_livable_area: 40628,
     min_market_value: 0,
-    max_market_value: 5000000,
+    max_market_value: 12000000,
   }); // Filter settings
   const [properties, setProperties] = useState([]); // Properties for search results
   const [currentPage, setCurrentPage] = useState(1); // Current page
