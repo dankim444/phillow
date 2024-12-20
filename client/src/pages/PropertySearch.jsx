@@ -28,7 +28,7 @@ export default function PropertySearch() {
     min_bedrooms: 0,
     max_bedrooms: 45,
     min_livable_area: 0,
-    max_livable_area: 40628,
+    max_livable_area: 45000,
     min_market_value: 0,
     max_market_value: 12000000,
   }); // Filter settings
@@ -251,11 +251,7 @@ export default function PropertySearch() {
             onChange={(e) => setAddress(e.target.value)}
             sx={{ marginRight: "10px", width: "300px" }}
           />
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleSearch}
-          >
+          <Button variant="contained" size="large" onClick={handleSearch}>
             Search by Address
           </Button>
         </Box>
@@ -276,7 +272,7 @@ export default function PropertySearch() {
                 }
                 valueLabelDisplay="auto"
                 min={0}
-                max={10}
+                max={25}
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -289,7 +285,7 @@ export default function PropertySearch() {
                 }
                 valueLabelDisplay="auto"
                 min={0}
-                max={10}
+                max={45}
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -302,7 +298,7 @@ export default function PropertySearch() {
                 }
                 valueLabelDisplay="auto"
                 min={0}
-                max={10000}
+                max={45000}
                 step={100}
               />
             </Grid>
@@ -316,7 +312,7 @@ export default function PropertySearch() {
                 }
                 valueLabelDisplay="auto"
                 min={0}
-                max={5000000}
+                max={12000000}
                 step={50000}
               />
             </Grid>
@@ -329,11 +325,7 @@ export default function PropertySearch() {
               marginTop: "20px",
             }}
           >
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleSearch}
-            >
+            <Button variant="contained" size="large" onClick={handleSearch}>
               Apply Filters
             </Button>
           </Box>
@@ -353,7 +345,7 @@ export default function PropertySearch() {
           }}
         >
           <Typography variant="h6">
-            Safety Information for Zip Code {zipcode}
+            Safety Information for Zip Code
           </Typography>
           <Typography>
             <strong>Population:</strong> {crimeStats.population}
@@ -381,7 +373,7 @@ export default function PropertySearch() {
           }}
         >
           <Typography variant="h6">
-            Average House Price for Zip Code {zipcode}
+            Average House Price for Zip Code
           </Typography>
           <Typography>
             <strong>Average Price:</strong> $
