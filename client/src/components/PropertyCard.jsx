@@ -70,12 +70,6 @@ export default function PropertyCard({ property }) {
     const fullAddress = `${address}, Philadelphia, PA ${zipcode}`;
 
     try {
-      console.log(
-        "Attempting to fetch from:",
-        `${API_URL}/property_location?address=${encodeURIComponent(
-          fullAddress
-        )}`
-      );
       const response = await fetch(
         `${API_URL}/property_location?address=${encodeURIComponent(
           fullAddress
@@ -84,30 +78,21 @@ export default function PropertyCard({ property }) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Received geocode data:", data);
 
         // Check if we have the required data
-        if (data && data.lon && data.lat) {
+        if (data) {
           setGeocodeData({
             lat: Number(data.lat),
             lon: Number(data.lon),
             display_name: data.display_name,
           });
-          console.log("Set geocode data:", {
-            lat: Number(data.lat),
-            lon: Number(data.lon),
-            display_name: data.display_name,
-          });
         } else {
-          console.error("Invalid or missing location data:", data);
           setError("Invalid location data received");
         }
       } else {
-        console.error("Response not ok:", response.status);
         setError(`Failed to load location data: ${response.status}`);
       }
     } catch (error) {
-      console.error("Fetch error:", error);
       setError(`Error loading location data: ${error.message}`);
     } finally {
       setIsLoading(false);

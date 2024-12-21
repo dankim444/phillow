@@ -34,12 +34,10 @@ const SafeHighValueProperties = () => {
         return response.json();
       })
       .then((data) => {
-        console.log("Fetched data:", data); // Debugging log
         setData(data);
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Error fetching data:", error); // Debugging log
         setError(error);
         setLoading(false);
       });
