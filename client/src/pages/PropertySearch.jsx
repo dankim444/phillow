@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -35,6 +35,14 @@ export default function PropertySearch() {
   const [properties, setProperties] = useState([]); // Properties for search results
   const [currentPage, setCurrentPage] = useState(1); // Current page
   const propertiesPerPage = 12; // Number of properties displayed per page
+  const [darkMode, setDarkMode] = useState(
+    () => JSON.parse(localStorage.getItem("darkMode")) || false
+  );
+
+  useEffect(() => {
+    const savedMode = JSON.parse(localStorage.getItem("darkMode"));
+    if (savedMode) setDarkMode(savedMode);
+  }, []);
 
   const zipCodes = [
     "19102",
@@ -178,10 +186,18 @@ export default function PropertySearch() {
   };
 
   return (
-    <Box sx={{ padding: "20px" }}>
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: "100vh",
+        padding: "20px",
+        backgroundColor: darkMode ? "#121212" : "#f8f9fa",
+        color: darkMode ? "#f0f0f0" : "#333",
+      }}
+    >
       <Box
         sx={{
-          backgroundColor: "#f8f9fa",
+          backgroundColor: darkMode ? "#121212" : "#f8f9fa",
           padding: "20px",
           borderRadius: "8px",
           boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
@@ -207,7 +223,7 @@ export default function PropertySearch() {
         <Typography variant="h4" gutterBottom>
           Find Your Dream Home
         </Typography>
-        <Typography variant="body1" color="textSecondary" gutterBottom>
+        <Typography variant="body1" gutterBottom>
           Search for properties in your desired neighborhood by zip code or
           specific address.
         </Typography>
@@ -216,12 +232,40 @@ export default function PropertySearch() {
         <Box
           sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}
         >
-          <FormControl sx={{ width: "300px", marginRight: "10px" }}>
-            <InputLabel>Select Zip Code</InputLabel>
+          <FormControl
+            sx={{
+              width: "300px",
+              marginRight: "10px",
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: darkMode ? "#f0f0f0" : "#333", // Outline color
+                },
+                "&:hover fieldset": {
+                  borderColor: darkMode ? "#f0f0f0" : "#333", // Outline color on hover
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: darkMode ? "#f0f0f0" : "#333", // Outline color when focused
+                },
+              },
+            }}
+          >
+            <InputLabel
+              sx={{
+                color: darkMode ? "#f0f0f0" : "#333", // Change color based on dark mode
+              }}
+            >
+              Select Zip Code
+            </InputLabel>
             <Select
               value={zipcode}
               onChange={(e) => setZipcode(e.target.value)}
               label="Select Zip Code"
+              sx={{
+                color: darkMode ? "#f0f0f0" : "#333", // Change color based on dark mode
+                "& .MuiSelect-icon": {
+                  color: darkMode ? "#f0f0f0" : "#333", // Change icon color based on dark mode
+                },
+              }}
             >
               {zipCodes.map((zip) => (
                 <MenuItem key={zip} value={zip}>
@@ -230,12 +274,7 @@ export default function PropertySearch() {
               ))}
             </Select>
           </FormControl>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleSearch}
-            disabled={!zipcode} // Disable button if no zip code selected
-          >
+          <Button variant="contained" size="large" onClick={handleSearch}>
             Search by Zip Code
           </Button>
         </Box>
@@ -249,7 +288,27 @@ export default function PropertySearch() {
             variant="outlined"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            sx={{ marginRight: "10px", width: "300px" }}
+            sx={{
+              marginRight: "10px",
+              width: "300px",
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: darkMode ? "#f0f0f0" : "#333", // Outline color
+                },
+                "&:hover fieldset": {
+                  borderColor: darkMode ? "#f0f0f0" : "#333", // Outline color on hover
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: darkMode ? "#f0f0f0" : "#333", // Outline color when focused
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: darkMode ? "#f0f0f0" : "#333", // Label color
+              },
+              "& .MuiInputBase-input": {
+                color: darkMode ? "#f0f0f0" : "#333", // Text color
+              },
+            }}
           />
           <Button variant="contained" size="large" onClick={handleSearch}>
             Search by Address
@@ -336,7 +395,7 @@ export default function PropertySearch() {
       {crimeStats && (
         <Box
           sx={{
-            backgroundColor: "#e3f2fd",
+            backgroundColor: darkMode ? "#2e3b4e" : "#e3f2fd",
             padding: "20px",
             borderRadius: "8px",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
@@ -344,9 +403,7 @@ export default function PropertySearch() {
             marginBottom: "20px",
           }}
         >
-          <Typography variant="h6">
-            Safety Information for Zip Code
-          </Typography>
+          <Typography variant="h6">Safety Information for Zip Code</Typography>
           <Typography>
             <strong>Population:</strong> {crimeStats.population}
           </Typography>
@@ -364,7 +421,7 @@ export default function PropertySearch() {
       {avgHousePrice && (
         <Box
           sx={{
-            backgroundColor: "#e8f5e9",
+            backgroundColor: darkMode ? "#2e4e3b" : "#e8f5e9",
             padding: "20px",
             borderRadius: "8px",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
@@ -372,9 +429,7 @@ export default function PropertySearch() {
             marginBottom: "20px",
           }}
         >
-          <Typography variant="h6">
-            Average House Price for Zip Code
-          </Typography>
+          <Typography variant="h6">Average House Price for Zip Code</Typography>
           <Typography>
             <strong>Average Price:</strong> $
             {Number(avgHousePrice.avg_house_price).toFixed(2)}
@@ -398,6 +453,9 @@ export default function PropertySearch() {
             display: "flex",
             justifyContent: "center",
             marginTop: "20px",
+            backgroundColor: darkMode ? "#333" : "#f0f0f0", // Background color based on dark mode
+            padding: "10px",
+            borderRadius: "8px",
           }}
         >
           <Pagination
@@ -405,6 +463,14 @@ export default function PropertySearch() {
             page={currentPage}
             onChange={handlePageChange}
             color="primary"
+            sx={{
+              "& .MuiPaginationItem-root": {
+                color: darkMode ? "#f0f0f0" : "#333", // Text color based on dark mode
+              },
+              "& .Mui-selected": {
+                backgroundColor: darkMode ? "#555" : "#ddd", // Selected item background color
+              },
+            }}
           />
         </Box>
       )}

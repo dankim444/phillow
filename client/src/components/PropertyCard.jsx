@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardMedia,
@@ -51,6 +51,14 @@ export default function PropertyCard({ property }) {
   const [geocodeData, setGeocodeData] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    () => JSON.parse(localStorage.getItem("darkMode")) || false
+  );
+
+  useEffect(() => {
+    const savedMode = JSON.parse(localStorage.getItem("darkMode"));
+    if (savedMode) setDarkMode(savedMode);
+  }, []);
 
   const handleOpenModal = () => {
     setOpenModal(true);
@@ -103,7 +111,11 @@ export default function PropertyCard({ property }) {
     <>
       <Card
         onClick={handleOpenModal}
-        sx={{ cursor: "pointer", margin: "20px" }}
+        sx={{
+          backgroundColor: darkMode ? "#2e3b4e" : "#e3f2fd",
+          cursor: "pointer",
+          margin: "20px",
+        }}
       >
         <CardMedia
           component="img"
@@ -112,20 +124,25 @@ export default function PropertyCard({ property }) {
           alt={property.category_code_description}
         />
         <CardContent>
-          <Typography variant="h6">{property.location}</Typography>
-          <Typography>
+          <Typography
+            variant="h6"
+            sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+          >
+            {property.location}
+          </Typography>
+          <Typography sx={{ color: darkMode ? "#f0f0f0" : "#333" }}>
             <strong>Zip Code:</strong> {property.zip_code}
           </Typography>
-          <Typography>
+          <Typography sx={{ color: darkMode ? "#f0f0f0" : "#333" }}>
             <strong>Market Value:</strong> ${Number(property.market_value)}
           </Typography>
-          <Typography>
+          <Typography sx={{ color: darkMode ? "#f0f0f0" : "#333" }}>
             <strong>Type:</strong> {property.category_code_description}
           </Typography>
-          <Typography>
+          <Typography sx={{ color: darkMode ? "#f0f0f0" : "#333" }}>
             <strong>Area:</strong> {property.total_livable_area} sqft
           </Typography>
-          <Typography>
+          <Typography sx={{ color: darkMode ? "#f0f0f0" : "#333" }}>
             <strong>Year Built:</strong> {property.year_built}
           </Typography>
         </CardContent>
@@ -135,12 +152,12 @@ export default function PropertyCard({ property }) {
       <Modal open={openModal} onClose={handleCloseModal}>
         <Box
           sx={{
+            backgroundColor: darkMode ? "#2e3b4e" : "#e3f2fd",
             position: "absolute",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
             width: "80%",
-            bgcolor: "background.paper",
             boxShadow: 24,
             borderRadius: 2,
             p: 4,
@@ -149,37 +166,65 @@ export default function PropertyCard({ property }) {
           <Grid container spacing={2}>
             {/* Left side: add more property details */}
             <Grid item xs={12} md={6}>
-              <Typography variant="h4" gutterBottom>
+              <Typography
+                variant="h4"
+                sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+                gutterBottom
+              >
                 {property.location}
               </Typography>
-              <Typography variant="body1">
+              <Typography
+                variant="body1"
+                sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+              >
                 <strong>Zip Code:</strong> {property.zip_code}
               </Typography>
-              <Typography variant="body1">
+              <Typography
+                variant="body1"
+                sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+              >
                 <strong>Market Value:</strong> ${Number(property.market_value)}
               </Typography>
-              <Typography variant="body1">
+              <Typography
+                variant="body1"
+                sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+              >
                 <strong>Sale Date:</strong> {property.sale_date}
               </Typography>
-              <Typography variant="body1">
+              <Typography
+                variant="body1"
+                sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+              >
                 <strong>Type:</strong> {property.category_code_description}
               </Typography>
-              <Typography variant="body1">
+              <Typography
+                variant="body1"
+                sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+              >
                 <strong>Bedrooms:</strong>{" "}
                 {property.number_of_bedrooms === 0
                   ? "N/A"
                   : property.number_of_bedrooms}
               </Typography>
-              <Typography variant="body1">
+              <Typography
+                variant="body1"
+                sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+              >
                 <strong>Bathrooms:</strong>{" "}
                 {Number(property.number_of_bathrooms) === 0
                   ? "N/A"
                   : Number(property.number_of_bathrooms)}
               </Typography>
-              <Typography variant="body1">
+              <Typography
+                variant="body1"
+                sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+              >
                 <strong>Year Built:</strong> {property.year_built}
               </Typography>
-              <Typography variant="body1">
+              <Typography
+                variant="body1"
+                sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+              >
                 <strong>Total Livable Area:</strong>{" "}
                 {property.total_livable_area} sqft
               </Typography>
