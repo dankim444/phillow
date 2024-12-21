@@ -1,7 +1,7 @@
 import React from "react";
 import { DataGrid } from "@mui/x-data-grid";
 
-const StreetPatterns = ({ data }) => (
+const StreetPatterns = ({ data, darkMode }) => (
   <DataGrid
     rows={data.map((row, index) => ({ id: index, ...row }))}
     columns={[
@@ -21,6 +21,10 @@ const StreetPatterns = ({ data }) => (
     ]}
     pageSize={10}
     autoHeight
+    sx={{
+      backgroundColor: darkMode ? "#1e1e1e" : "#fff",
+      color: darkMode ? "#f0f0f0" : "#333",
+    }}
   />
 );
 

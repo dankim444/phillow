@@ -36,6 +36,14 @@ export default function Insights() {
   const [selectedInsight, setSelectedInsight] = useState(null); // Track the selected insight
   const [endpoint, setEndpoint] = useState(null); // Store the endpoint to fetch data from
   const [buttonClicked, setButtonClicked] = useState(false); // Track if a button has been clicked
+  const [darkMode, setDarkMode] = useState(
+    () => JSON.parse(localStorage.getItem("darkMode")) || false
+  );
+
+  useEffect(() => {
+    const savedMode = JSON.parse(localStorage.getItem("darkMode"));
+    if (savedMode) setDarkMode(savedMode);
+  }, []);
 
   const { data, loading, error } = useFetchData(endpoint);
 
@@ -72,7 +80,7 @@ export default function Insights() {
       );
 
     if (selectedInsight === "propertyInfo") {
-      return <SafeHighValueProperties />;
+      return <SafeHighValueProperties darkMode={darkMode} />;
     }
 
     if (loading) return <Typography>Loading...</Typography>;
@@ -87,18 +95,26 @@ export default function Insights() {
 
     switch (selectedInsight) {
       case "zipcodeInfo":
-        return <ZipcodeInfo data={data} />;
+        return <ZipcodeInfo data={data} darkMode={darkMode} />;
       case "streetPatterns":
-        return <StreetPatterns data={data} />;
+        return <StreetPatterns data={data} darkMode={darkMode} />;
       case "streetInfo":
-        return <StreetInfo data={data} />;
+        return <StreetInfo data={data} darkMode={darkMode} />;
       default:
         return <Typography>Select an insight to view details.</Typography>;
     }
   };
 
   return (
-    <Box sx={{ padding: "20px" }}>
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: "100vh",
+        padding: "20px",
+        backgroundColor: darkMode ? "#121212" : "#f8f9fa",
+        color: darkMode ? "#f0f0f0" : "#333",
+      }}
+    >
       {/* Home Button */}
       <Button
         component={Link}

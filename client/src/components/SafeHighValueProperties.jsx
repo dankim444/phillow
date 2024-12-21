@@ -13,7 +13,7 @@ import { DataGrid } from "@mui/x-data-grid";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
-const SafeHighValueProperties = () => {
+const SafeHighValueProperties = ({ darkMode }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -56,17 +56,51 @@ const SafeHighValueProperties = () => {
   };
 
   return (
-    <Box sx={{ padding: "20px" }}>
+    <Box
+      sx={{
+        padding: "20px",
+        backgroundColor: darkMode ? "#121212" : "#f8f9fa",
+        color: darkMode ? "#f0f0f0" : "#333",
+      }}
+    >
       <Typography variant="h6" sx={{ marginBottom: "50px" }} gutterBottom>
         Safe High Value Properties
       </Typography>
       <Box sx={{ marginBottom: "20px" }}>
-        <FormControl sx={{ marginRight: "20px", minWidth: 200 }}>
-          <InputLabel>Crime Type</InputLabel>
+        <FormControl
+          sx={{
+            minWidth: 200,
+            marginRight: "20px",
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: darkMode ? "#f0f0f0" : "#333", // Outline color
+              },
+              "&:hover fieldset": {
+                borderColor: darkMode ? "#f0f0f0" : "#333", // Outline color on hover
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: darkMode ? "#f0f0f0" : "#333", // Outline color when focused
+              },
+            },
+          }}
+        >
+          <InputLabel
+            sx={{
+              color: darkMode ? "#f0f0f0" : "#333",
+            }}
+          >
+            Crime Type
+          </InputLabel>
           <Select
             value={crimeType}
             onChange={handleCrimeTypeChange}
-            sx={{ marginTop: "20px" }} // Add margin to create space
+            sx={{
+              marginTop: "20px",
+              color: darkMode ? "#f0f0f0" : "#333",
+              "& .MuiSelect-icon": {
+                color: darkMode ? "#f0f0f0" : "#333",
+              },
+            }} // Add margin to create space
           >
             <MenuItem value="Vagrancy/Loitering">Vagrancy/Loitering</MenuItem>
             <MenuItem value="Forgery and Counterfeiting">
@@ -180,6 +214,10 @@ const SafeHighValueProperties = () => {
                 ]}
                 pageSize={10}
                 autoHeight
+                sx={{
+                  backgroundColor: darkMode ? "#1e1e1e" : "#fff",
+                  color: darkMode ? "#f0f0f0" : "#333",
+                }}
               />
             </>
           )}
