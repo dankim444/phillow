@@ -53,7 +53,10 @@ const createStarIcon = () => {
 };
 
 export default function CrimeMap() {
-  const [tabIndex, setTabIndex] = useState(0); // To manage active tab
+  const [tabIndex, setTabIndex] = useState(() => {
+    const savedTabIndex = localStorage.getItem("tabIndex");
+    return savedTabIndex ? parseInt(savedTabIndex, 10) : 0;
+  }); // To manage active tab
   const [zipcode, setZipcode] = useState(""); // Zip code for search
   const [newAddress, setNewAddress] = useState(""); // New address input
   const [addresses, setAddresses] = useState(() => {
@@ -121,6 +124,7 @@ export default function CrimeMap() {
   // Switch between tabs
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
+    localStorage.setItem("tabIndex", newValue);
     setError(""); // Clear errors when switching tabs
     setCrimeData([]);
     setPoliceStationData([]);
