@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -23,7 +23,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 // Function to determine marker color based on crime count
 const getMarkerColor = (crimeCount) => {
@@ -56,11 +56,17 @@ export default function CrimeMap() {
   const [tabIndex, setTabIndex] = useState(0); // To manage active tab
   const [zipcode, setZipcode] = useState(""); // Zip code for search
   const [newAddress, setNewAddress] = useState(""); // New address input
-  const [addresses, setAddresses] = useState([]); // List of addresses
+  const [addresses, setAddresses] = useState(() => {
+    const savedAddresses = localStorage.getItem("addresses");
+    return savedAddresses ? JSON.parse(savedAddresses) : [];
+  }); // List of addresses
   const [radius, setRadius] = useState(0.5); // Radius for address-based search
   const [crimeData, setCrimeData] = useState([]); // Crime data for zip code
   const [policeStationData, setPoliceStationData] = useState([]); // Police station data for zip code
-  const [dataByAddress, setDataByAddress] = useState([]); // Crime and station data for each address
+  const [dataByAddress, setDataByAddress] = useState(() => {
+    const savedData = localStorage.getItem("dataByAddress");
+    return savedData ? JSON.parse(savedData) : [];
+  }); // Crime and station data for each address
   const [error, setError] = useState("");
 
   const zipCodes = [
@@ -132,9 +138,7 @@ export default function CrimeMap() {
     setPoliceStationData([]);
 
     try {
-      const response = await fetch(
-        `${API_URL}/crimes_in_zip/${zipcode}`
-      );
+      const response = await fetch(`${API_URL}/crimes_in_zip/${zipcode}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -190,6 +194,15 @@ export default function CrimeMap() {
       );
     }
   };
+
+  // Save addresses and dataByAddress to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("addresses", JSON.stringify(addresses));
+  }, [addresses]);
+
+  useEffect(() => {
+    localStorage.setItem("dataByAddress", JSON.stringify(dataByAddress));
+  }, [dataByAddress]);
 
   // Add a new address to the list
   const addAddress = () => {
@@ -296,31 +309,6 @@ export default function CrimeMap() {
               Add Address
             </Button>
           </Box>
-
-          {/* Address List with Remove Option */}
-          {addresses.map((address, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "10px",
-                backgroundColor: "#f9f9f9",
-                padding: "10px",
-                borderRadius: "5px",
-              }}
-            >
-              <Typography>{address}</Typography>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={() => removeAddress(index)}
-              >
-                Delete
-              </Button>
-            </Box>
-          ))}
         </Box>
       )}
 
@@ -332,7 +320,7 @@ export default function CrimeMap() {
       )}
 
       {/* Comparison Table */}
-      {dataByAddress.length > 0 && (
+      {tabIndex === 1 && dataByAddress.length > 0 && addresses.length > 0 && (
         <TableContainer component={Paper} sx={{ marginTop: "20px" }}>
           <Table>
             <TableHead>
@@ -348,6 +336,9 @@ export default function CrimeMap() {
                 </TableCell>
                 <TableCell>
                   <strong>Police Stations Nearby</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Delete</strong>
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -376,6 +367,28 @@ export default function CrimeMap() {
                       ))}
                     </TableCell>
                     <TableCell>{entry.stations.length}</TableCell>
+                    <TableCell>
+                      <Box
+                        key={index}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "10px",
+                          backgroundColor: "#f9f9f9",
+                          padding: "10px",
+                          borderRadius: "5px",
+                        }}
+                      >
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => removeAddress(index)}
+                        >
+                          Delete
+                        </Button>
+                      </Box>
+                    </TableCell>
                   </TableRow>
                 );
               })}
