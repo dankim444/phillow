@@ -251,7 +251,7 @@ export default function PropertySearch() {
           >
             <InputLabel
               sx={{
-                color: darkMode ? "#f0f0f0" : "#333", // Change color based on dark mode
+                color: darkMode ? "#f0f0f0" : "#333",
               }}
             >
               Select Zip Code

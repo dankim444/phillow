@@ -71,6 +71,14 @@ export default function CrimeMap() {
     return savedData ? JSON.parse(savedData) : [];
   }); // Crime and station data for each address
   const [error, setError] = useState("");
+  const [darkMode, setDarkMode] = useState(
+    () => JSON.parse(localStorage.getItem("darkMode")) || false
+  );
+
+  useEffect(() => {
+    const savedMode = JSON.parse(localStorage.getItem("darkMode"));
+    if (savedMode) setDarkMode(savedMode);
+  }, []);
 
   const zipCodes = [
     "19102",
@@ -227,7 +235,13 @@ export default function CrimeMap() {
   };
 
   return (
-    <Box sx={{ padding: "20px" }}>
+    <Box
+      sx={{
+        padding: "20px",
+        backgroundColor: darkMode ? "#121212" : "#f8f9fa",
+        color: darkMode ? "#f0f0f0" : "#333",
+      }}
+    >
       {/* Home Button */}
       <Button
         component={Link}
@@ -253,8 +267,14 @@ export default function CrimeMap() {
         sx={{ marginBottom: "20px" }}
         centered
       >
-        <Tab label="Search by Zip Code" />
-        <Tab label="Search by Address" />
+        <Tab
+          sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+          label="Search by Zip Code"
+        />
+        <Tab
+          sx={{ color: darkMode ? "#f0f0f0" : "#333" }}
+          label="Search by Address"
+        />
       </Tabs>
 
       {tabIndex === 0 && (
@@ -263,12 +283,40 @@ export default function CrimeMap() {
           <Box
             sx={{ display: "flex", alignItems: "center", marginBottom: "20px" }}
           >
-            <FormControl sx={{ width: "300px", marginRight: "10px" }}>
-              <InputLabel>Select Zip Code</InputLabel>
+            <FormControl
+              sx={{
+                width: "300px",
+                marginRight: "10px",
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: darkMode ? "#f0f0f0" : "#333",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: darkMode ? "#f0f0f0" : "#333",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: darkMode ? "#f0f0f0" : "#333",
+                  },
+                },
+              }}
+            >
+              <InputLabel
+                sx={{
+                  color: darkMode ? "#f0f0f0" : "#333",
+                }}
+              >
+                Select Zip Code
+              </InputLabel>
               <Select
                 value={zipcode}
                 onChange={(e) => setZipcode(e.target.value)}
                 label="Select Zip Code"
+                sx={{
+                  color: darkMode ? "#f0f0f0" : "#333",
+                  "& .MuiSelect-icon": {
+                    color: darkMode ? "#f0f0f0" : "#333",
+                  },
+                }}
               >
                 {zipCodes.map((zip) => (
                   <MenuItem key={zip} value={zip}>
@@ -299,7 +347,28 @@ export default function CrimeMap() {
               variant="outlined"
               value={newAddress}
               onChange={(e) => setNewAddress(e.target.value)}
-              sx={{ marginRight: "10px", width: "300px" }}
+              sx={{
+                color: darkMode ? "#f0f0f0" : "#333",
+                width: "300px",
+                marginRight: "10px",
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: darkMode ? "#f0f0f0" : "#333",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: darkMode ? "#f0f0f0" : "#333",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: darkMode ? "#f0f0f0" : "#333",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: darkMode ? "#f0f0f0" : "#333", // Label color
+                },
+                "& .MuiInputBase-input": {
+                  color: darkMode ? "#f0f0f0" : "#333", // Text color
+                },
+              }}
             />
             <TextField
               label="Radius (km)"
@@ -307,7 +376,28 @@ export default function CrimeMap() {
               variant="outlined"
               value={radius}
               onChange={(e) => setRadius(e.target.value)}
-              sx={{ marginRight: "10px", width: "150px" }}
+              sx={{
+                color: darkMode ? "#f0f0f0" : "#333",
+                width: "150px",
+                marginRight: "10px",
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: darkMode ? "#f0f0f0" : "#333",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: darkMode ? "#f0f0f0" : "#333",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: darkMode ? "#f0f0f0" : "#333",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: darkMode ? "#f0f0f0" : "#333", // Label color
+                },
+                "& .MuiInputBase-input": {
+                  color: darkMode ? "#f0f0f0" : "#333", // Text color
+                },
+              }}
             />
             <Button variant="contained" size="large" onClick={addAddress}>
               Add Address
@@ -325,23 +415,52 @@ export default function CrimeMap() {
 
       {/* Comparison Table */}
       {tabIndex === 1 && dataByAddress.length > 0 && addresses.length > 0 && (
-        <TableContainer component={Paper} sx={{ marginTop: "20px" }}>
-          <Table>
+        <TableContainer
+          sx={{
+            marginTop: "20px",
+          }}
+          component={Paper}
+        >
+          <Table
+            sx={{
+              backgroundColor: darkMode ? "#2e3b4e" : "#e3f2fd",
+            }}
+          >
             <TableHead>
               <TableRow>
-                <TableCell>
+                <TableCell
+                  sx={{
+                    color: darkMode ? "#f0f0f0" : "#333",
+                  }}
+                >
                   <strong>Address</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell
+                  sx={{
+                    color: darkMode ? "#f0f0f0" : "#333",
+                  }}
+                >
                   <strong>Total Crimes</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell
+                  sx={{
+                    color: darkMode ? "#f0f0f0" : "#333",
+                  }}
+                >
                   <strong>Top 3 Crime Types</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell
+                  sx={{
+                    color: darkMode ? "#f0f0f0" : "#333",
+                  }}
+                >
                   <strong>Police Stations Nearby</strong>
                 </TableCell>
-                <TableCell>
+                <TableCell
+                  sx={{
+                    color: darkMode ? "#f0f0f0" : "#333",
+                  }}
+                >
                   <strong>Delete</strong>
                 </TableCell>
               </TableRow>
@@ -361,37 +480,46 @@ export default function CrimeMap() {
 
                 return (
                   <TableRow key={`row-${index}`}>
-                    <TableCell>{entry.address}</TableCell>
-                    <TableCell>{entry.crimes.length}</TableCell>
-                    <TableCell>
+                    <TableCell
+                      sx={{
+                        color: darkMode ? "#f0f0f0" : "#333",
+                      }}
+                    >
+                      {entry.address}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        color: darkMode ? "#f0f0f0" : "#333",
+                      }}
+                    >
+                      {entry.crimes.length}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        color: darkMode ? "#f0f0f0" : "#333",
+                      }}
+                    >
                       {topCrimes.map(([crimeType, count]) => (
                         <div key={crimeType}>
                           {crimeType}: {count}
                         </div>
                       ))}
                     </TableCell>
-                    <TableCell>{entry.stations.length}</TableCell>
+                    <TableCell
+                      sx={{
+                        color: darkMode ? "#f0f0f0" : "#333",
+                      }}
+                    >
+                      {entry.stations.length}
+                    </TableCell>
                     <TableCell>
-                      <Box
-                        key={index}
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "10px",
-                          backgroundColor: "#f9f9f9",
-                          padding: "10px",
-                          borderRadius: "5px",
-                        }}
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => removeAddress(index)}
                       >
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => removeAddress(index)}
-                        >
-                          Delete
-                        </Button>
-                      </Box>
+                        Delete
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );
